@@ -1,0 +1,47 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "cli": {
+    "analytics": false
+  },
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "ng-gridstack": {
+      "projectType": "library",
+      "root": "projects/ng-gridstack",
+      "sourceRoot": "projects/ng-gridstack/src",
+      "prefix": "lib",
+
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/ng-gridstack/ng-package.json",
+            "tsConfig": "projects/ng-gridstack/tsconfig.lib.prod.json",
+            "styles": [
+              "projects/ng-gridstack/styles/gridstack.scss"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/ng-gridstack/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/ng-gridstack/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/ng-gridstack/src/test.ts",
+            "tsConfig": "projects/ng-gridstack/tsconfig.spec.json",
+            "karmaConfig": "projects/ng-gridstack/karma.conf.js"
+          }
+        }
+      }
+    }
+  },
+  "defaultProject": "ng-gridstack"
+}
