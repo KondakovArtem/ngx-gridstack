@@ -1,9 +1,15 @@
 import { setCompodocJson } from "@storybook/addon-docs/angular";
 import docJson from "../documentation.json";
+
+[...docJson.components, ...docJson.directives].forEach(item => {
+  item.propertiesClass = [];
+})
+
+
 setCompodocJson(docJson);
 
-// import '!style-loader!css-loader!./styles.css';
-// import '!style-loader!css-loader!sass-loader!../projects/ng-gridstack/styles/gridstack.scss';
+
+
 
 export const parameters = {
   actions: { argTypesRegex: "^on[A-Z].*" },
@@ -14,4 +20,4 @@ export const parameters = {
     },
   },
   docs: { inlineStories: true },
-}
+};

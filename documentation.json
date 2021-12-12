@@ -1,14 +1,58 @@
 {
-    "pipes": [],
+    "pipes": [
+        {
+            "name": "SafeJsonPipe",
+            "id": "pipe-SafeJsonPipe-f81b669c275af7a0c4370232d47ec8ebbd77de77b3a4607efa2b6af70453e91e21230e9c9b69cb33121ebfb6888b931b7c91e401bfc984625a14467d1860a39f",
+            "file": "projects/ngx-gridstack/src/pipe/json.pipe.ts",
+            "type": "pipe",
+            "deprecated": false,
+            "deprecationMessage": "",
+            "description": "",
+            "rawdescription": "\n",
+            "properties": [],
+            "methods": [
+                {
+                    "name": "transform",
+                    "args": [
+                        {
+                            "name": "value",
+                            "type": "any",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "string",
+                    "typeParameters": [],
+                    "line": 15,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "jsdoctags": [
+                        {
+                            "name": "value",
+                            "type": "any",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "ngname": "safeJson",
+            "sourceCode": "import { Pipe, PipeTransform } from '@angular/core';\r\nimport safeJsonStringify from 'safe-json-stringify';\r\n\r\n/*\r\n * Raise the value exponentially\r\n * Takes an exponent argument that defaults to 1.\r\n * Usage:\r\n *   value | exponentialStrength:exponent\r\n * Example:\r\n *   {{ 2 | exponentialStrength:10 }}\r\n *   formats to: 1024\r\n */\r\n@Pipe({ name: 'safeJson' })\r\nexport class SafeJsonPipe implements PipeTransform {\r\n    transform(value: any): string {\r\n        return safeJsonStringify(value);\r\n    }\r\n}\r\n"
+        }
+    ],
     "interfaces": [
         {
             "name": "HTMLDivElementEx",
-            "id": "interface-HTMLDivElementEx-246b293bc233dbb07fb7e3d7f8b08bab",
-            "file": "projects/ng-gridstack/src/components/gridstack.component.ts",
+            "id": "interface-HTMLDivElementEx-5fd22d341801a290d0c9948303309c1509afdefe414a8fda9df3f8e5c233696f4020bbdff3f103aecc6aad285740a77d76ee011ce90bc37d19c35cda08851502",
+            "file": "projects/ngx-gridstack/src/components/gridstack.component.ts",
             "deprecated": false,
             "deprecationMessage": "",
             "type": "interface",
-            "sourceCode": "import {\r\n  ChangeDetectionStrategy,\r\n  Component,\r\n  ElementRef,\r\n  OnInit,\r\n  Output,\r\n  EventEmitter,\r\n  Input,\r\n} from '@angular/core';\r\nimport type {\r\n  GridStackOptions,\r\n  GridStackWidget,\r\n  numberOrString,\r\n} from 'gridstack';\r\nimport { GridStack } from 'gridstack';\r\nimport 'gridstack/dist/gridstack-h5';\r\nimport 'gridstack/dist/h5/gridstack-dd-native';\r\nimport uniqueId from 'lodash/uniqueId';\r\nimport debounce from 'lodash/debounce';\r\n\r\nimport type { GridstackItemComponent } from './gridstack-item.component';\r\n\r\nexport interface HTMLDivElementEx extends HTMLDivElement {\r\n  gsId?: numberOrString;\r\n}\r\n\r\n@Component({\r\n  selector: 'div[gridstack]',\r\n  template: '<ng-content></ng-content>',\r\n  // styleUrls: ['./gridstack.component.scss'],\r\n  changeDetection: ChangeDetectionStrategy.OnPush,\r\n})\r\nexport class GridstackComponent implements OnInit {\r\n  public uid = uniqueId('gridstack');\r\n\r\n  @Input() gridstack?: GridStackOptions;\r\n  @Output() gridItemsChange = new EventEmitter<GridStackWidget[]>();\r\n\r\n  private gridstackItems: GridstackItemComponent[] = [];\r\n\r\n  constructor(private el: ElementRef<HTMLDivElement>) {}\r\n\r\n  private grid?: GridStack;\r\n\r\n  public makeWidgetDebounce = debounce(() => {\r\n    this.grid?.batchUpdate();\r\n\r\n    const preItem = JSON.stringify(this.getCurrentItems());\r\n\r\n    this.grid?.removeAll();\r\n    this.gridstackItems.forEach((i) => (i.isRegistered = false));\r\n\r\n    this.gridstackItems.forEach((item) => {\r\n      if (!item.isRegistered) {\r\n        this.grid?.makeWidget(item.el.nativeElement);\r\n        item.isRegistered = true;\r\n      }\r\n    });\r\n    this.grid?.commit();\r\n\r\n    const newItems = this.getCurrentItems();\r\n    if (JSON.stringify(this.getCurrentItems()) !== preItem) {\r\n      this.updateChange();\r\n    }\r\n  });\r\n\r\n  public registerWidget(gridstackItem: GridstackItemComponent) {\r\n    this.gridstackItems.push(gridstackItem);\r\n    // this.itemsToRegister.push(el);\r\n    this.makeWidgetDebounce();\r\n  }\r\n\r\n  public unregisterWidget(gridstackItem: GridstackItemComponent) {\r\n    this.gridstackItems = this.gridstackItems.filter(\r\n      (i) => i !== gridstackItem\r\n    );\r\n  }\r\n\r\n  private getCurrentItems(): GridStackWidget[] {\r\n    return this.grid\r\n      ?.getGridItems()\r\n      .map((item) => {\r\n        const { gridstackNode } = item;\r\n        const gridStackItem = this.gridstackItems.find(\r\n          (i) => i.el.nativeElement === item\r\n        );\r\n        if (gridStackItem && gridstackNode) {\r\n          const { data } = gridStackItem;\r\n          const { x, y, w, h } = gridstackNode;\r\n          return { ...data, x, y, w, h };\r\n        }\r\n        return undefined;\r\n      })\r\n      .filter((i) => i) as GridStackWidget[];\r\n  }\r\n\r\n  public trackById(idx: number, value: GridStackWidget) {\r\n    return value?.id;\r\n  }\r\n\r\n  private updateChange() {\r\n    if (this.gridItemsChange.observed) {\r\n      const currentItems = this.getCurrentItems();\r\n      this.gridstackItems.forEach((item) => {\r\n        const { id } = item.data;\r\n        const currentItem = currentItems.find((i) => i.id === id);\r\n        if (currentItem) {\r\n          Object.assign(item.data, currentItem);\r\n        }\r\n      });\r\n      this.gridItemsChange.emit(this.getCurrentItems());\r\n    }\r\n  }\r\n\r\n  ngOnInit() {\r\n    this.el.nativeElement.classList.add('grid-stack');\r\n\r\n    const options: GridStackOptions = {\r\n      resizable: {\r\n        autoHide: true,\r\n        handles: 'e, se, s, sw, w, n, ne, nw',\r\n      },\r\n\r\n      ...this.gridstack,\r\n    };\r\n\r\n    this.grid = GridStack.init(options);\r\n    this.grid.on('change', ($event) => this.updateChange());\r\n  }\r\n}\r\n",
+            "sourceCode": "import {\r\n    ChangeDetectionStrategy,\r\n    Component,\r\n    ElementRef,\r\n    OnInit,\r\n    Output,\r\n    EventEmitter,\r\n    Input,\r\n    OnChanges,\r\n    SimpleChanges,\r\n} from '@angular/core';\r\nimport type {\r\n    GridItemHTMLElement,\r\n    GridStackNode,\r\n    GridStackOptions,\r\n    GridStackWidget,\r\n    numberOrString,\r\n} from 'gridstack';\r\nimport { GridStack } from 'gridstack';\r\nimport 'gridstack/dist/gridstack-h5';\r\nimport 'gridstack/dist/h5/gridstack-dd-native';\r\nimport { debounce } from '../utils/debounce';\r\nimport { uniqueId } from '../utils/uniqueId';\r\n\r\nimport type { GridstackItemComponent } from './gridstack-item.component';\r\n\r\nexport interface HTMLDivElementEx extends HTMLDivElement {\r\n    gsId?: numberOrString;\r\n}\r\n\r\ntype TGridItemEl = GridItemHTMLElement | GridStackNode | GridStackNode[] | undefined;\r\n\r\n@Component({\r\n    selector: 'div[gridstack]',\r\n    template: '<ng-content></ng-content>',\r\n    // styleUrls: ['./gridstack.component.scss'],\r\n    changeDetection: ChangeDetectionStrategy.OnPush,\r\n})\r\nexport class GridstackComponent implements OnInit, OnChanges {\r\n    public uid = uniqueId('gridstack');\r\n\r\n    @Input() gridstack?: GridStackOptions;\r\n    /**\r\n     * Occurs when widgets change their position/size due to constrain or direct changes\r\n     */\r\n    @Output() gridItemsChange = new EventEmitter<GridStackWidget[]>();\r\n    /**\r\n     * Called when widgets are being added to a grid\r\n     */\r\n    @Output() onAdded = new EventEmitter<{\r\n        event: Event;\r\n        items: TGridItemEl;\r\n    }>();\r\n    @Output() onDisable = new EventEmitter<boolean>();\r\n    /**\r\n     * called when grid item is starting to be dragged\r\n     */\r\n    @Output() onDragstart = new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>();\r\n    /**\r\n     * called after the user is done moving the item, with updated DOM attributes.\r\n     */\r\n    @Output() onDragstop = new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>();\r\n\r\n    @Output() onDropped = new EventEmitter<{\r\n        event: Event;\r\n        previousWidget: TGridItemEl;\r\n        newWidget: TGridItemEl;\r\n    }>();\r\n\r\n    @Output() onResizestart = new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>();\r\n\r\n    @Output() onResizestop = new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>();\r\n\r\n    private gridstackItems: GridstackItemComponent[] = [];\r\n\r\n    constructor(private el: ElementRef<HTMLDivElement>) {}\r\n\r\n    private grid?: GridStack;\r\n\r\n    public makeWidgetDebounce = debounce(() => {\r\n        this.grid?.batchUpdate();\r\n\r\n        const preItem = JSON.stringify(this.getCurrentDataItems());\r\n\r\n        this.grid?.removeAll();\r\n        this.gridstackItems.forEach((i) => {\r\n            i.isRegistered = false;\r\n        });\r\n\r\n        this.gridstackItems.forEach((item) => {\r\n            if (!item.isRegistered) {\r\n                this.grid?.makeWidget(item.el.nativeElement);\r\n                item.isRegistered = true;\r\n                item.update();\r\n            }\r\n        });\r\n        this.grid?.commit();\r\n        const newItems = this.getCurrentItems();\r\n        if (JSON.stringify(newItems) !== preItem) {\r\n            this.updateChange();\r\n        }\r\n    });\r\n\r\n    public registerWidget(gridstackItem: GridstackItemComponent): void {\r\n        if (!this.gridstackItems.includes(gridstackItem)) {\r\n            this.gridstackItems.push(gridstackItem);\r\n        }\r\n    }\r\n\r\n    public unregisterWidget(gridstackItem: GridstackItemComponent): void {\r\n        this.gridstackItems = this.gridstackItems.filter((i) => i !== gridstackItem);\r\n    }\r\n\r\n    private getCurrentDataItems(): GridStackWidget[] {\r\n        return (this.gridstackItems || [])\r\n            .map((item) => {\r\n                const { data } = item;\r\n                return data;\r\n            })\r\n            .filter((i) => i) as GridStackWidget[];\r\n    }\r\n\r\n    private getCurrentItems(): GridStackWidget[] {\r\n        return this.grid\r\n            ?.getGridItems()\r\n            .map((item) => {\r\n                const { gridstackNode } = item;\r\n                const gridStackItem = this.gridstackItems.find((i) => i.el.nativeElement === item);\r\n                if (gridStackItem && gridstackNode) {\r\n                    const { data } = gridStackItem;\r\n                    const { x, y, w, h } = gridstackNode;\r\n                    return { ...data, x, y, w, h };\r\n                }\r\n                return undefined;\r\n            })\r\n            .filter((i) => i) as GridStackWidget[];\r\n    }\r\n\r\n    public trackById(idx: number, value: GridStackWidget): string | number | undefined {\r\n        return value?.id;\r\n    }\r\n\r\n    private updateChange(): void {\r\n        const currentItems = this.getCurrentItems();\r\n        if (this.gridItemsChange.observed) {\r\n            this.gridItemsChange.emit(currentItems);\r\n        } else {\r\n            this.gridstackItems.forEach((item) => {\r\n                const { id } = item.data;\r\n                const currentItem = currentItems.find((i) => i.id === id);\r\n                if (currentItem) {\r\n                    Object.assign(item.data, currentItem);\r\n                }\r\n            });\r\n        }\r\n    }\r\n\r\n    ngOnChanges(changes: SimpleChanges): void {\r\n        if (changes.gridstack) {\r\n            if (this.grid) {\r\n                this.grid.off('change');\r\n\r\n                this.grid.destroy(false);\r\n            }\r\n            this.grid = GridStack.init(\r\n                {\r\n                    resizable: {\r\n                        autoHide: true,\r\n                        handles: 'e, se, s, sw, w, n, ne, nw',\r\n                    },\r\n                    ...changes.gridstack.currentValue,\r\n                },\r\n                this.el.nativeElement,\r\n            );\r\n\r\n            // Events\r\n            this.grid.on('change', () => this.updateChange());\r\n            this.grid.on('added', (event, items) => this.onAdded.emit({ event, items }));\r\n            this.grid.on('disable', () => this.onDisable.emit(true));\r\n            this.grid.on('enable', () => this.onDisable.emit(false));\r\n            this.grid.on('dragstart', (event, el) => this.onDragstart.emit({ event, el }));\r\n            this.grid.on('dragstop', (event, el) => this.onDragstop.emit({ event, el }));\r\n            this.grid.on('dropped', (event, previousWidget, newWidget) =>\r\n                this.onDropped.emit({ event, previousWidget, newWidget }),\r\n            );\r\n            this.grid.on('resizestart', (event, el) => this.onResizestart.emit({ event, el }));\r\n            this.grid.on('resizestop', (event, el) => this.onResizestop.emit({ event, el }));\r\n\r\n            this.makeWidgetDebounce();\r\n        }\r\n    }\r\n\r\n    ngOnInit(): void {\r\n        this.el.nativeElement.classList.add('grid-stack');\r\n    }\r\n}\r\n",
             "properties": [
                 {
                     "name": "gsId",
@@ -17,11 +61,11 @@
                     "type": "numberOrString",
                     "optional": true,
                     "description": "",
-                    "line": 24
+                    "line": 28
                 }
             ],
             "indexSignatures": [],
-            "kind": 164,
+            "kind": 165,
             "methods": [],
             "extends": "HTMLDivElement"
         }
@@ -33,9 +77,53 @@
     "directives": [],
     "components": [
         {
+            "name": "AppComponent",
+            "id": "component-AppComponent-7dc639d180ab8ebf9edd78251f1cc9384dfb7a55bf5c64f6d0303a2c678939c773b5ce8b1f6dd40d9b2acd2b8c6e6367b21c056ab97cba71eeb924d584f724d2",
+            "file": "src/app/app.component.ts",
+            "encapsulation": [],
+            "entryComponents": [],
+            "inputs": [],
+            "outputs": [],
+            "providers": [],
+            "selector": "app-root",
+            "styleUrls": [],
+            "styles": [],
+            "templateUrl": [
+                "./app.component.html"
+            ],
+            "viewProviders": [],
+            "inputsClass": [],
+            "outputsClass": [],
+            "propertiesClass": [
+                {
+                    "name": "title",
+                    "defaultValue": "'ngx-gridstack-project'",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "string",
+                    "optional": false,
+                    "description": "",
+                    "line": 8
+                }
+            ],
+            "methodsClass": [],
+            "deprecated": false,
+            "deprecationMessage": "",
+            "hostBindings": [],
+            "hostListeners": [],
+            "description": "",
+            "rawdescription": "\n",
+            "type": "component",
+            "sourceCode": "import { Component } from '@angular/core';\r\n\r\n@Component({\r\n    selector: 'app-root',\r\n    templateUrl: './app.component.html',\r\n})\r\nexport class AppComponent {\r\n    title = 'ngx-gridstack-project';\r\n}\r\n",
+            "assetsDirs": [],
+            "styleUrlsData": "",
+            "stylesData": "",
+            "templateData": "<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->\r\n<!-- * * * * * * * * * * * The content below * * * * * * * * * * * -->\r\n<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->\r\n<!-- * * * * * * * * * * and can be replaced. * * * * * * * * * * * -->\r\n<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->\r\n<!-- * * * * * * * * * Delete the template below * * * * * * * * * * -->\r\n<!-- * * * * * * * to get started with your project! * * * * * * * * -->\r\n<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->\r\n\r\n<style>\r\n    :host {\r\n        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,\r\n            sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';\r\n        font-size: 14px;\r\n        color: #333;\r\n        box-sizing: border-box;\r\n        -webkit-font-smoothing: antialiased;\r\n        -moz-osx-font-smoothing: grayscale;\r\n    }\r\n\r\n    h1,\r\n    h2,\r\n    h3,\r\n    h4,\r\n    h5,\r\n    h6 {\r\n        margin: 8px 0;\r\n    }\r\n\r\n    p {\r\n        margin: 0;\r\n    }\r\n\r\n    .spacer {\r\n        flex: 1;\r\n    }\r\n\r\n    .toolbar {\r\n        position: absolute;\r\n        top: 0;\r\n        left: 0;\r\n        right: 0;\r\n        height: 60px;\r\n        display: flex;\r\n        align-items: center;\r\n        background-color: #1976d2;\r\n        color: white;\r\n        font-weight: 600;\r\n    }\r\n\r\n    .toolbar img {\r\n        margin: 0 16px;\r\n    }\r\n\r\n    .toolbar #twitter-logo {\r\n        height: 40px;\r\n        margin: 0 8px;\r\n    }\r\n\r\n    .toolbar #youtube-logo {\r\n        height: 40px;\r\n        margin: 0 16px;\r\n    }\r\n\r\n    .toolbar #twitter-logo:hover,\r\n    .toolbar #youtube-logo:hover {\r\n        opacity: 0.8;\r\n    }\r\n\r\n    .content {\r\n        display: flex;\r\n        margin: 82px auto 32px;\r\n        padding: 0 16px;\r\n        max-width: 960px;\r\n        flex-direction: column;\r\n        align-items: center;\r\n    }\r\n\r\n    svg.material-icons {\r\n        height: 24px;\r\n        width: auto;\r\n    }\r\n\r\n    svg.material-icons:not(:last-child) {\r\n        margin-right: 8px;\r\n    }\r\n\r\n    .card svg.material-icons path {\r\n        fill: #888;\r\n    }\r\n\r\n    .card-container {\r\n        display: flex;\r\n        flex-wrap: wrap;\r\n        justify-content: center;\r\n        margin-top: 16px;\r\n    }\r\n\r\n    .card {\r\n        all: unset;\r\n        border-radius: 4px;\r\n        border: 1px solid #eee;\r\n        background-color: #fafafa;\r\n        height: 40px;\r\n        width: 200px;\r\n        margin: 0 8px 16px;\r\n        padding: 16px;\r\n        display: flex;\r\n        flex-direction: row;\r\n        justify-content: center;\r\n        align-items: center;\r\n        transition: all 0.2s ease-in-out;\r\n        line-height: 24px;\r\n    }\r\n\r\n    .card-container .card:not(:last-child) {\r\n        margin-right: 0;\r\n    }\r\n\r\n    .card.card-small {\r\n        height: 16px;\r\n        width: 168px;\r\n    }\r\n\r\n    .card-container .card:not(.highlight-card) {\r\n        cursor: pointer;\r\n    }\r\n\r\n    .card-container .card:not(.highlight-card):hover {\r\n        transform: translateY(-3px);\r\n        box-shadow: 0 4px 17px rgba(0, 0, 0, 0.35);\r\n    }\r\n\r\n    .card-container .card:not(.highlight-card):hover .material-icons path {\r\n        fill: rgb(105, 103, 103);\r\n    }\r\n\r\n    .card.highlight-card {\r\n        background-color: #1976d2;\r\n        color: white;\r\n        font-weight: 600;\r\n        border: none;\r\n        width: auto;\r\n        min-width: 30%;\r\n        position: relative;\r\n    }\r\n\r\n    .card.card.highlight-card span {\r\n        margin-left: 60px;\r\n    }\r\n\r\n    svg#rocket {\r\n        width: 80px;\r\n        position: absolute;\r\n        left: -10px;\r\n        top: -24px;\r\n    }\r\n\r\n    svg#rocket-smoke {\r\n        height: calc(100vh - 95px);\r\n        position: absolute;\r\n        top: 10px;\r\n        right: 180px;\r\n        z-index: -10;\r\n    }\r\n\r\n    a,\r\n    a:visited,\r\n    a:hover {\r\n        color: #1976d2;\r\n        text-decoration: none;\r\n    }\r\n\r\n    a:hover {\r\n        color: #125699;\r\n    }\r\n\r\n    .terminal {\r\n        position: relative;\r\n        width: 80%;\r\n        max-width: 600px;\r\n        border-radius: 6px;\r\n        padding-top: 45px;\r\n        margin-top: 8px;\r\n        overflow: hidden;\r\n        background-color: rgb(15, 15, 16);\r\n    }\r\n\r\n    .terminal::before {\r\n        content: '\\2022 \\2022 \\2022';\r\n        position: absolute;\r\n        top: 0;\r\n        left: 0;\r\n        height: 4px;\r\n        background: rgb(58, 58, 58);\r\n        color: #c2c3c4;\r\n        width: 100%;\r\n        font-size: 2rem;\r\n        line-height: 0;\r\n        padding: 14px 0;\r\n        text-indent: 4px;\r\n    }\r\n\r\n    .terminal pre {\r\n        font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, monospace;\r\n        color: white;\r\n        padding: 0 1rem 1rem;\r\n        margin: 0;\r\n    }\r\n\r\n    .circle-link {\r\n        height: 40px;\r\n        width: 40px;\r\n        border-radius: 40px;\r\n        margin: 8px;\r\n        background-color: white;\r\n        border: 1px solid #eeeeee;\r\n        display: flex;\r\n        justify-content: center;\r\n        align-items: center;\r\n        cursor: pointer;\r\n        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);\r\n        transition: 1s ease-out;\r\n    }\r\n\r\n    .circle-link:hover {\r\n        transform: translateY(-0.25rem);\r\n        box-shadow: 0px 3px 15px rgba(0, 0, 0, 0.2);\r\n    }\r\n\r\n    footer {\r\n        margin-top: 8px;\r\n        display: flex;\r\n        align-items: center;\r\n        line-height: 20px;\r\n    }\r\n\r\n    footer a {\r\n        display: flex;\r\n        align-items: center;\r\n    }\r\n\r\n    .github-star-badge {\r\n        color: #24292e;\r\n        display: flex;\r\n        align-items: center;\r\n        font-size: 12px;\r\n        padding: 3px 10px;\r\n        border: 1px solid rgba(27, 31, 35, 0.2);\r\n        border-radius: 3px;\r\n        background-image: linear-gradient(-180deg, #fafbfc, #eff3f6 90%);\r\n        margin-left: 4px;\r\n        font-weight: 600;\r\n    }\r\n\r\n    .github-star-badge:hover {\r\n        background-image: linear-gradient(-180deg, #f0f3f6, #e6ebf1 90%);\r\n        border-color: rgba(27, 31, 35, 0.35);\r\n        background-position: -0.5em;\r\n    }\r\n\r\n    .github-star-badge .material-icons {\r\n        height: 16px;\r\n        width: 16px;\r\n        margin-right: 4px;\r\n    }\r\n\r\n    svg#clouds {\r\n        position: fixed;\r\n        bottom: -160px;\r\n        left: -230px;\r\n        z-index: -10;\r\n        width: 1920px;\r\n    }\r\n\r\n    /* Responsive Styles */\r\n    @media screen and (max-width: 767px) {\r\n        .card-container > *:not(.circle-link),\r\n        .terminal {\r\n            width: 100%;\r\n        }\r\n\r\n        .card:not(.highlight-card) {\r\n            height: 16px;\r\n            margin: 8px 0;\r\n        }\r\n\r\n        .card.highlight-card span {\r\n            margin-left: 72px;\r\n        }\r\n\r\n        svg#rocket-smoke {\r\n            right: 120px;\r\n            transform: rotate(-5deg);\r\n        }\r\n    }\r\n\r\n    @media screen and (max-width: 575px) {\r\n        svg#rocket-smoke {\r\n            display: none;\r\n            visibility: hidden;\r\n        }\r\n    }\r\n</style>\r\n\r\n<!-- Toolbar -->\r\n<div class=\"toolbar\" role=\"banner\">\r\n    <img\r\n        width=\"40\"\r\n        alt=\"Angular Logo\"\r\n        src=\"data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNTAgMjUwIj4KICAgIDxwYXRoIGZpbGw9IiNERDAwMzEiIGQ9Ik0xMjUgMzBMMzEuOSA2My4ybDE0LjIgMTIzLjFMMTI1IDIzMGw3OC45LTQzLjcgMTQuMi0xMjMuMXoiIC8+CiAgICA8cGF0aCBmaWxsPSIjQzMwMDJGIiBkPSJNMTI1IDMwdjIyLjItLjFWMjMwbDc4LjktNDMuNyAxNC4yLTEyMy4xTDEyNSAzMHoiIC8+CiAgICA8cGF0aCAgZmlsbD0iI0ZGRkZGRiIgZD0iTTEyNSA1Mi4xTDY2LjggMTgyLjZoMjEuN2wxMS43LTI5LjJoNDkuNGwxMS43IDI5LjJIMTgzTDEyNSA1Mi4xem0xNyA4My4zaC0zNGwxNy00MC45IDE3IDQwLjl6IiAvPgogIDwvc3ZnPg==\"\r\n    />\r\n    <span>Welcome</span>\r\n    <div class=\"spacer\"></div>\r\n    <a\r\n        aria-label=\"Angular on twitter\"\r\n        target=\"_blank\"\r\n        rel=\"noopener\"\r\n        href=\"https://twitter.com/angular\"\r\n        title=\"Twitter\"\r\n    >\r\n        <svg\r\n            id=\"twitter-logo\"\r\n            height=\"24\"\r\n            data-name=\"Logo\"\r\n            xmlns=\"http://www.w3.org/2000/svg\"\r\n            viewBox=\"0 0 400 400\"\r\n        >\r\n            <rect width=\"400\" height=\"400\" fill=\"none\" />\r\n            <path\r\n                d=\"M153.62,301.59c94.34,0,145.94-78.16,145.94-145.94,0-2.22,0-4.43-.15-6.63A104.36,104.36,0,0,0,325,122.47a102.38,102.38,0,0,1-29.46,8.07,51.47,51.47,0,0,0,22.55-28.37,102.79,102.79,0,0,1-32.57,12.45,51.34,51.34,0,0,0-87.41,46.78A145.62,145.62,0,0,1,92.4,107.81a51.33,51.33,0,0,0,15.88,68.47A50.91,50.91,0,0,1,85,169.86c0,.21,0,.43,0,.65a51.31,51.31,0,0,0,41.15,50.28,51.21,51.21,0,0,1-23.16.88,51.35,51.35,0,0,0,47.92,35.62,102.92,102.92,0,0,1-63.7,22A104.41,104.41,0,0,1,75,278.55a145.21,145.21,0,0,0,78.62,23\"\r\n                fill=\"#fff\"\r\n            />\r\n        </svg>\r\n    </a>\r\n    <a\r\n        aria-label=\"Angular on YouTube\"\r\n        target=\"_blank\"\r\n        rel=\"noopener\"\r\n        href=\"https://youtube.com/angular\"\r\n        title=\"YouTube\"\r\n    >\r\n        <svg\r\n            id=\"youtube-logo\"\r\n            height=\"24\"\r\n            width=\"24\"\r\n            data-name=\"Logo\"\r\n            xmlns=\"http://www.w3.org/2000/svg\"\r\n            viewBox=\"0 0 24 24\"\r\n            fill=\"#fff\"\r\n        >\r\n            <path d=\"M0 0h24v24H0V0z\" fill=\"none\" />\r\n            <path\r\n                d=\"M21.58 7.19c-.23-.86-.91-1.54-1.77-1.77C18.25 5 12 5 12 5s-6.25 0-7.81.42c-.86.23-1.54.91-1.77 1.77C2 8.75 2 12 2 12s0 3.25.42 4.81c.23.86.91 1.54 1.77 1.77C5.75 19 12 19 12 19s6.25 0 7.81-.42c.86-.23 1.54-.91 1.77-1.77C22 15.25 22 12 22 12s0-3.25-.42-4.81zM10 15V9l5.2 3-5.2 3z\"\r\n            />\r\n        </svg>\r\n    </a>\r\n</div>\r\n\r\n<div class=\"content\" role=\"main\">\r\n    <!-- Highlight Card -->\r\n    <div class=\"card highlight-card card-small\">\r\n        <svg\r\n            id=\"rocket\"\r\n            xmlns=\"http://www.w3.org/2000/svg\"\r\n            width=\"101.678\"\r\n            height=\"101.678\"\r\n            viewBox=\"0 0 101.678 101.678\"\r\n        >\r\n            <title>Rocket Ship</title>\r\n            <g id=\"Group_83\" data-name=\"Group 83\" transform=\"translate(-141 -696)\">\r\n                <circle\r\n                    id=\"Ellipse_8\"\r\n                    data-name=\"Ellipse 8\"\r\n                    cx=\"50.839\"\r\n                    cy=\"50.839\"\r\n                    r=\"50.839\"\r\n                    transform=\"translate(141 696)\"\r\n                    fill=\"#dd0031\"\r\n                />\r\n                <g id=\"Group_47\" data-name=\"Group 47\" transform=\"translate(165.185 720.185)\">\r\n                    <path\r\n                        id=\"Path_33\"\r\n                        data-name=\"Path 33\"\r\n                        d=\"M3.4,42.615a3.084,3.084,0,0,0,3.553,3.553,21.419,21.419,0,0,0,12.215-6.107L9.511,30.4A21.419,21.419,0,0,0,3.4,42.615Z\"\r\n                        transform=\"translate(0.371 3.363)\"\r\n                        fill=\"#fff\"\r\n                    />\r\n                    <path\r\n                        id=\"Path_34\"\r\n                        data-name=\"Path 34\"\r\n                        d=\"M53.3,3.221A3.09,3.09,0,0,0,50.081,0,48.227,48.227,0,0,0,18.322,13.437c-6-1.666-14.991-1.221-18.322,7.218A33.892,33.892,0,0,1,9.439,25.1l-.333.666a3.013,3.013,0,0,0,.555,3.553L23.985,43.641a2.9,2.9,0,0,0,3.553.555l.666-.333A33.892,33.892,0,0,1,32.647,53.3c8.55-3.664,8.884-12.326,7.218-18.322A48.227,48.227,0,0,0,53.3,3.221ZM34.424,9.772a6.439,6.439,0,1,1,9.106,9.106,6.368,6.368,0,0,1-9.106,0A6.467,6.467,0,0,1,34.424,9.772Z\"\r\n                        transform=\"translate(0 0.005)\"\r\n                        fill=\"#fff\"\r\n                    />\r\n                </g>\r\n            </g>\r\n        </svg>\r\n\r\n        <span>{{ title }} app is running!</span>\r\n\r\n        <svg\r\n            id=\"rocket-smoke\"\r\n            xmlns=\"http://www.w3.org/2000/svg\"\r\n            width=\"516.119\"\r\n            height=\"1083.632\"\r\n            viewBox=\"0 0 516.119 1083.632\"\r\n        >\r\n            <title>Rocket Ship Smoke</title>\r\n            <path\r\n                id=\"Path_40\"\r\n                data-name=\"Path 40\"\r\n                d=\"M644.6,141S143.02,215.537,147.049,870.207s342.774,201.755,342.774,201.755S404.659,847.213,388.815,762.2c-27.116-145.51-11.551-384.124,271.9-609.1C671.15,139.365,644.6,141,644.6,141Z\"\r\n                transform=\"translate(-147.025 -140.939)\"\r\n                fill=\"#f5f5f5\"\r\n            />\r\n        </svg>\r\n    </div>\r\n\r\n    <!-- Resources -->\r\n    <h2>Resources</h2>\r\n    <p>Here are some links to help you get started:</p>\r\n\r\n    <div class=\"card-container\">\r\n        <a class=\"card\" target=\"_blank\" rel=\"noopener\" href=\"https://angular.io/tutorial\">\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path\r\n                    d=\"M5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82zM12 3L1 9l11 6 9-4.91V17h2V9L12 3z\"\r\n                />\r\n            </svg>\r\n            <span>Learn Angular</span>\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path d=\"M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z\" />\r\n            </svg>\r\n        </a>\r\n\r\n        <a class=\"card\" target=\"_blank\" rel=\"noopener\" href=\"https://angular.io/cli\">\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path\r\n                    d=\"M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z\"\r\n                />\r\n            </svg>\r\n            <span>CLI Documentation</span>\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path d=\"M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z\" />\r\n            </svg>\r\n        </a>\r\n\r\n        <a class=\"card\" target=\"_blank\" rel=\"noopener\" href=\"https://blog.angular.io/\">\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path\r\n                    d=\"M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.62 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM11.71 19c-1.78 0-3.22-1.4-3.22-3.14 0-1.62 1.05-2.76 2.81-3.12 1.77-.36 3.6-1.21 4.62-2.58.39 1.29.59 2.65.59 4.04 0 2.65-2.15 4.8-4.8 4.8z\"\r\n                />\r\n            </svg>\r\n            <span>Angular Blog</span>\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path d=\"M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z\" />\r\n            </svg>\r\n        </a>\r\n\r\n        <a class=\"card\" target=\"_blank\" rel=\"noopener\" href=\"https://angular.io/devtools/\">\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                enable-background=\"new 0 0 24 24\"\r\n                height=\"24px\"\r\n                viewBox=\"0 0 24 24\"\r\n                width=\"24px\"\r\n                fill=\"#000000\"\r\n            >\r\n                <g><rect fill=\"none\" height=\"24\" width=\"24\" /></g>\r\n                <g>\r\n                    <g>\r\n                        <path\r\n                            d=\"M14.73,13.31C15.52,12.24,16,10.93,16,9.5C16,5.91,13.09,3,9.5,3S3,5.91,3,9.5C3,13.09,5.91,16,9.5,16 c1.43,0,2.74-0.48,3.81-1.27L19.59,21L21,19.59L14.73,13.31z M9.5,14C7.01,14,5,11.99,5,9.5S7.01,5,9.5,5S14,7.01,14,9.5 S11.99,14,9.5,14z\"\r\n                        />\r\n                        <polygon\r\n                            points=\"10.29,8.44 9.5,6 8.71,8.44 6.25,8.44 8.26,10.03 7.49,12.5 9.5,10.97 11.51,12.5 10.74,10.03 12.75,8.44\"\r\n                        />\r\n                    </g>\r\n                </g>\r\n            </svg>\r\n            <span>Angular DevTools</span>\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path d=\"M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z\" />\r\n            </svg>\r\n        </a>\r\n    </div>\r\n\r\n    <!-- Next Steps -->\r\n    <h2>Next Steps</h2>\r\n    <p>What do you want to do next with your app?</p>\r\n\r\n    <input type=\"hidden\" #selection />\r\n\r\n    <div class=\"card-container\">\r\n        <button class=\"card card-small\" (click)=\"selection.value = 'component'\" tabindex=\"0\">\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path d=\"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z\" />\r\n            </svg>\r\n            <span>New Component</span>\r\n        </button>\r\n\r\n        <button class=\"card card-small\" (click)=\"selection.value = 'material'\" tabindex=\"0\">\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path d=\"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z\" />\r\n            </svg>\r\n            <span>Angular Material</span>\r\n        </button>\r\n\r\n        <button class=\"card card-small\" (click)=\"selection.value = 'pwa'\" tabindex=\"0\">\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path d=\"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z\" />\r\n            </svg>\r\n            <span>Add PWA Support</span>\r\n        </button>\r\n\r\n        <button class=\"card card-small\" (click)=\"selection.value = 'dependency'\" tabindex=\"0\">\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path d=\"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z\" />\r\n            </svg>\r\n            <span>Add Dependency</span>\r\n        </button>\r\n\r\n        <button class=\"card card-small\" (click)=\"selection.value = 'test'\" tabindex=\"0\">\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path d=\"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z\" />\r\n            </svg>\r\n            <span>Run and Watch Tests</span>\r\n        </button>\r\n\r\n        <button class=\"card card-small\" (click)=\"selection.value = 'build'\" tabindex=\"0\">\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path d=\"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z\" />\r\n            </svg>\r\n            <span>Build for Production</span>\r\n        </button>\r\n    </div>\r\n\r\n    <!-- Terminal -->\r\n    <div class=\"terminal\" [ngSwitch]=\"selection.value\">\r\n        <pre *ngSwitchDefault>ng generate component xyz</pre>\r\n        <pre *ngSwitchCase=\"'material'\">ng add @angular/material</pre>\r\n        <pre *ngSwitchCase=\"'pwa'\">ng add @angular/pwa</pre>\r\n        <pre *ngSwitchCase=\"'dependency'\">ng add _____</pre>\r\n        <pre *ngSwitchCase=\"'test'\">ng test</pre>\r\n        <pre *ngSwitchCase=\"'build'\">ng build</pre>\r\n    </div>\r\n\r\n    <!-- Links -->\r\n    <div class=\"card-container\">\r\n        <a\r\n            class=\"circle-link\"\r\n            title=\"Animations\"\r\n            href=\"https://angular.io/guide/animations\"\r\n            target=\"_blank\"\r\n            rel=\"noopener\"\r\n        >\r\n            <svg\r\n                id=\"Group_20\"\r\n                data-name=\"Group 20\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"21.813\"\r\n                height=\"23.453\"\r\n                viewBox=\"0 0 21.813 23.453\"\r\n            >\r\n                <path\r\n                    id=\"Path_15\"\r\n                    data-name=\"Path 15\"\r\n                    d=\"M4099.584,972.736h0l-10.882,3.9,1.637,14.4,9.245,5.153,9.245-5.153,1.686-14.4Z\"\r\n                    transform=\"translate(-4088.702 -972.736)\"\r\n                    fill=\"#ffa726\"\r\n                />\r\n                <path\r\n                    id=\"Path_16\"\r\n                    data-name=\"Path 16\"\r\n                    d=\"M4181.516,972.736v23.453l9.245-5.153,1.686-14.4Z\"\r\n                    transform=\"translate(-4170.633 -972.736)\"\r\n                    fill=\"#fb8c00\"\r\n                />\r\n                <path\r\n                    id=\"Path_17\"\r\n                    data-name=\"Path 17\"\r\n                    d=\"M4137.529,1076.127l-7.7-3.723,4.417-2.721,7.753,3.723Z\"\r\n                    transform=\"translate(-4125.003 -1058.315)\"\r\n                    fill=\"#ffe0b2\"\r\n                />\r\n                <path\r\n                    id=\"Path_18\"\r\n                    data-name=\"Path 18\"\r\n                    d=\"M4137.529,1051.705l-7.7-3.723,4.417-2.721,7.753,3.723Z\"\r\n                    transform=\"translate(-4125.003 -1036.757)\"\r\n                    fill=\"#fff3e0\"\r\n                />\r\n                <path\r\n                    id=\"Path_19\"\r\n                    data-name=\"Path 19\"\r\n                    d=\"M4137.529,1027.283l-7.7-3.723,4.417-2.721,7.753,3.723Z\"\r\n                    transform=\"translate(-4125.003 -1015.199)\"\r\n                    fill=\"#fff\"\r\n                />\r\n            </svg>\r\n        </a>\r\n\r\n        <a\r\n            class=\"circle-link\"\r\n            title=\"CLI\"\r\n            href=\"https://cli.angular.io/\"\r\n            target=\"_blank\"\r\n            rel=\"noopener\"\r\n        >\r\n            <svg\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"21.762\"\r\n                height=\"23.447\"\r\n                viewBox=\"0 0 21.762 23.447\"\r\n            >\r\n                <title>Angular CLI Logo</title>\r\n                <g id=\"Group_21\" data-name=\"Group 21\" transform=\"translate(0)\">\r\n                    <path\r\n                        id=\"Path_20\"\r\n                        data-name=\"Path 20\"\r\n                        d=\"M2660.313,313.618h0l-10.833,3.9,1.637,14.4,9.2,5.152,9.244-5.152,1.685-14.4Z\"\r\n                        transform=\"translate(-2649.48 -313.618)\"\r\n                        fill=\"#37474f\"\r\n                    />\r\n                    <path\r\n                        id=\"Path_21\"\r\n                        data-name=\"Path 21\"\r\n                        d=\"M2741.883,313.618v23.447l9.244-5.152,1.685-14.4Z\"\r\n                        transform=\"translate(-2731.05 -313.618)\"\r\n                        fill=\"#263238\"\r\n                    />\r\n                    <path\r\n                        id=\"Path_22\"\r\n                        data-name=\"Path 22\"\r\n                        d=\"M2692.293,379.169h11.724V368.618h-11.724Zm11.159-.6h-10.608v-9.345h10.621v9.345Z\"\r\n                        transform=\"translate(-2687.274 -362.17)\"\r\n                        fill=\"#fff\"\r\n                    />\r\n                    <path\r\n                        id=\"Path_23\"\r\n                        data-name=\"Path 23\"\r\n                        d=\"M2709.331,393.688l.4.416,2.265-2.28-2.294-2.294-.4.4,1.893,1.893Z\"\r\n                        transform=\"translate(-2702.289 -380.631)\"\r\n                        fill=\"#fff\"\r\n                    />\r\n                    <rect\r\n                        id=\"Rectangle_12\"\r\n                        data-name=\"Rectangle 12\"\r\n                        width=\"3.517\"\r\n                        height=\"0.469\"\r\n                        transform=\"translate(9.709 13.744)\"\r\n                        fill=\"#fff\"\r\n                    />\r\n                </g>\r\n            </svg>\r\n        </a>\r\n\r\n        <a\r\n            class=\"circle-link\"\r\n            title=\"Find a Local Meetup\"\r\n            href=\"https://www.meetup.com/find/?keywords=angular\"\r\n            target=\"_blank\"\r\n            rel=\"noopener\"\r\n        >\r\n            <svg\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24.607\"\r\n                height=\"23.447\"\r\n                viewBox=\"0 0 24.607 23.447\"\r\n            >\r\n                <title>Meetup Logo</title>\r\n                <path\r\n                    id=\"logo--mSwarm\"\r\n                    d=\"M21.221,14.95A4.393,4.393,0,0,1,17.6,19.281a4.452,4.452,0,0,1-.8.069c-.09,0-.125.035-.154.117a2.939,2.939,0,0,1-2.506,2.091,2.868,2.868,0,0,1-2.248-.624.168.168,0,0,0-.245-.005,3.926,3.926,0,0,1-2.589.741,4.015,4.015,0,0,1-3.7-3.347,2.7,2.7,0,0,1-.043-.38c0-.106-.042-.146-.143-.166a3.524,3.524,0,0,1-1.516-.69A3.623,3.623,0,0,1,2.23,14.557a3.66,3.66,0,0,1,1.077-3.085.138.138,0,0,0,.026-.2,3.348,3.348,0,0,1-.451-1.821,3.46,3.46,0,0,1,2.749-3.28.44.44,0,0,0,.355-.281,5.072,5.072,0,0,1,3.863-3,5.028,5.028,0,0,1,3.555.666.31.31,0,0,0,.271.03A4.5,4.5,0,0,1,18.3,4.7a4.4,4.4,0,0,1,1.334,2.751,3.658,3.658,0,0,1,.022.706.131.131,0,0,0,.1.157,2.432,2.432,0,0,1,1.574,1.645,2.464,2.464,0,0,1-.7,2.616c-.065.064-.051.1-.014.166A4.321,4.321,0,0,1,21.221,14.95ZM13.4,14.607a2.09,2.09,0,0,0,1.409,1.982,4.7,4.7,0,0,0,1.275.221,1.807,1.807,0,0,0,.9-.151.542.542,0,0,0,.321-.545.558.558,0,0,0-.359-.534,1.2,1.2,0,0,0-.254-.078c-.262-.047-.526-.086-.787-.138a.674.674,0,0,1-.617-.75,3.394,3.394,0,0,1,.218-1.109c.217-.658.509-1.286.79-1.918a15.609,15.609,0,0,0,.745-1.86,1.95,1.95,0,0,0,.06-1.073,1.286,1.286,0,0,0-1.051-1.033,1.977,1.977,0,0,0-1.521.2.339.339,0,0,1-.446-.042c-.1-.092-.2-.189-.307-.284a1.214,1.214,0,0,0-1.643-.061,7.563,7.563,0,0,1-.614.512A.588.588,0,0,1,10.883,8c-.215-.115-.437-.215-.659-.316a2.153,2.153,0,0,0-.695-.248A2.091,2.091,0,0,0,7.541,8.562a9.915,9.915,0,0,0-.405.986c-.559,1.545-1.015,3.123-1.487,4.7a1.528,1.528,0,0,0,.634,1.777,1.755,1.755,0,0,0,1.5.211,1.35,1.35,0,0,0,.824-.858c.543-1.281,1.032-2.584,1.55-3.875.142-.355.28-.712.432-1.064a.548.548,0,0,1,.851-.24.622.622,0,0,1,.185.539,2.161,2.161,0,0,1-.181.621c-.337.852-.68,1.7-1.018,2.552a2.564,2.564,0,0,0-.173.528.624.624,0,0,0,.333.71,1.073,1.073,0,0,0,.814.034,1.22,1.22,0,0,0,.657-.655q.758-1.488,1.511-2.978.35-.687.709-1.37a1.073,1.073,0,0,1,.357-.434.43.43,0,0,1,.463-.016.373.373,0,0,1,.153.387.7.7,0,0,1-.057.236c-.065.157-.127.316-.2.469-.42.883-.846,1.763-1.262,2.648A2.463,2.463,0,0,0,13.4,14.607Zm5.888,6.508a1.09,1.09,0,0,0-2.179.006,1.09,1.09,0,0,0,2.179-.006ZM1.028,12.139a1.038,1.038,0,1,0,.01-2.075,1.038,1.038,0,0,0-.01,2.075ZM13.782.528a1.027,1.027,0,1,0-.011,2.055A1.027,1.027,0,0,0,13.782.528ZM22.21,6.95a.882.882,0,0,0-1.763.011A.882.882,0,0,0,22.21,6.95ZM4.153,4.439a.785.785,0,1,0,.787-.78A.766.766,0,0,0,4.153,4.439Zm8.221,18.22a.676.676,0,1,0-.677.666A.671.671,0,0,0,12.374,22.658ZM22.872,12.2a.674.674,0,0,0-.665.665.656.656,0,0,0,.655.643.634.634,0,0,0,.655-.644A.654.654,0,0,0,22.872,12.2ZM7.171-.123A.546.546,0,0,0,6.613.43a.553.553,0,1,0,1.106,0A.539.539,0,0,0,7.171-.123ZM24.119,9.234a.507.507,0,0,0-.493.488.494.494,0,0,0,.494.494.48.48,0,0,0,.487-.483A.491.491,0,0,0,24.119,9.234Zm-19.454,9.7a.5.5,0,0,0-.488-.488.491.491,0,0,0-.487.5.483.483,0,0,0,.491.479A.49.49,0,0,0,4.665,18.936Z\"\r\n                    transform=\"translate(0 0.123)\"\r\n                    fill=\"#f64060\"\r\n                />\r\n            </svg>\r\n        </a>\r\n\r\n        <a\r\n            class=\"circle-link\"\r\n            title=\"Join the Conversation on Discord\"\r\n            href=\"https://discord.gg/angular\"\r\n            target=\"_blank\"\r\n            rel=\"noopener\"\r\n        >\r\n            <svg xmlns=\"http://www.w3.org/2000/svg\" width=\"26\" height=\"26\" viewBox=\"0 0 245 240\">\r\n                <title>Discord Logo</title>\r\n                <path\r\n                    d=\"M104.4 103.9c-5.7 0-10.2 5-10.2 11.1s4.6 11.1 10.2 11.1c5.7 0 10.2-5 10.2-11.1.1-6.1-4.5-11.1-10.2-11.1zM140.9 103.9c-5.7 0-10.2 5-10.2 11.1s4.6 11.1 10.2 11.1c5.7 0 10.2-5 10.2-11.1s-4.5-11.1-10.2-11.1z\"\r\n                />\r\n                <path\r\n                    d=\"M189.5 20h-134C44.2 20 35 29.2 35 40.6v135.2c0 11.4 9.2 20.6 20.5 20.6h113.4l-5.3-18.5 12.8 11.9 12.1 11.2 21.5 19V40.6c0-11.4-9.2-20.6-20.5-20.6zm-38.6 130.6s-3.6-4.3-6.6-8.1c13.1-3.7 18.1-11.9 18.1-11.9-4.1 2.7-8 4.6-11.5 5.9-5 2.1-9.8 3.5-14.5 4.3-9.6 1.8-18.4 1.3-25.9-.1-5.7-1.1-10.6-2.7-14.7-4.3-2.3-.9-4.8-2-7.3-3.4-.3-.2-.6-.3-.9-.5-.2-.1-.3-.2-.4-.3-1.8-1-2.8-1.7-2.8-1.7s4.8 8 17.5 11.8c-3 3.8-6.7 8.3-6.7 8.3-22.1-.7-30.5-15.2-30.5-15.2 0-32.2 14.4-58.3 14.4-58.3 14.4-10.8 28.1-10.5 28.1-10.5l1 1.2c-18 5.2-26.3 13.1-26.3 13.1s2.2-1.2 5.9-2.9c10.7-4.7 19.2-6 22.7-6.3.6-.1 1.1-.2 1.7-.2 6.1-.8 13-1 20.2-.2 9.5 1.1 19.7 3.9 30.1 9.6 0 0-7.9-7.5-24.9-12.7l1.4-1.6s13.7-.3 28.1 10.5c0 0 14.4 26.1 14.4 58.3 0 0-8.5 14.5-30.6 15.2z\"\r\n                />\r\n            </svg>\r\n        </a>\r\n    </div>\r\n\r\n    <!-- Footer -->\r\n    <footer>\r\n        Love Angular?&nbsp;\r\n        <a href=\"https://github.com/angular/angular\" target=\"_blank\" rel=\"noopener\">\r\n            Give our repo a star.\r\n            <div class=\"github-star-badge\">\r\n                <svg\r\n                    class=\"material-icons\"\r\n                    xmlns=\"http://www.w3.org/2000/svg\"\r\n                    width=\"24\"\r\n                    height=\"24\"\r\n                    viewBox=\"0 0 24 24\"\r\n                >\r\n                    <path d=\"M0 0h24v24H0z\" fill=\"none\" />\r\n                    <path\r\n                        d=\"M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z\"\r\n                    />\r\n                </svg>\r\n                Star\r\n            </div>\r\n        </a>\r\n        <a href=\"https://github.com/angular/angular\" target=\"_blank\" rel=\"noopener\">\r\n            <svg\r\n                class=\"material-icons\"\r\n                xmlns=\"http://www.w3.org/2000/svg\"\r\n                width=\"24\"\r\n                height=\"24\"\r\n                viewBox=\"0 0 24 24\"\r\n            >\r\n                <path d=\"M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z\" fill=\"#1976d2\" />\r\n                <path d=\"M0 0h24v24H0z\" fill=\"none\" />\r\n            </svg>\r\n        </a>\r\n    </footer>\r\n\r\n    <svg\r\n        id=\"clouds\"\r\n        xmlns=\"http://www.w3.org/2000/svg\"\r\n        width=\"2611.084\"\r\n        height=\"485.677\"\r\n        viewBox=\"0 0 2611.084 485.677\"\r\n    >\r\n        <title>Gray Clouds Background</title>\r\n        <path\r\n            id=\"Path_39\"\r\n            data-name=\"Path 39\"\r\n            d=\"M2379.709,863.793c10-93-77-171-168-149-52-114-225-105-264,15-75,3-140,59-152,133-30,2.83-66.725,9.829-93.5,26.25-26.771-16.421-63.5-23.42-93.5-26.25-12-74-77-130-152-133-39-120-212-129-264-15-54.084-13.075-106.753,9.173-138.488,48.9-31.734-39.726-84.4-61.974-138.487-48.9-52-114-225-105-264,15a162.027,162.027,0,0,0-103.147,43.044c-30.633-45.365-87.1-72.091-145.206-58.044-52-114-225-105-264,15-75,3-140,59-152,133-53,5-127,23-130,83-2,42,35,72,70,86,49,20,106,18,157,5a165.625,165.625,0,0,0,120,0c47,94,178,113,251,33,61.112,8.015,113.854-5.72,150.492-29.764a165.62,165.62,0,0,0,110.861-3.236c47,94,178,113,251,33,31.385,4.116,60.563,2.495,86.487-3.311,25.924,5.806,55.1,7.427,86.488,3.311,73,80,204,61,251-33a165.625,165.625,0,0,0,120,0c51,13,108,15,157-5a147.188,147.188,0,0,0,33.5-18.694,147.217,147.217,0,0,0,33.5,18.694c49,20,106,18,157,5a165.625,165.625,0,0,0,120,0c47,94,178,113,251,33C2446.709,1093.793,2554.709,922.793,2379.709,863.793Z\"\r\n            transform=\"translate(142.69 -634.312)\"\r\n            fill=\"#eee\"\r\n        />\r\n    </svg>\r\n</div>\r\n\r\n<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->\r\n<!-- * * * * * * * * * * * The content above * * * * * * * * * * * -->\r\n<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * -->\r\n<!-- * * * * * * * * * * and can be replaced. * * * * * * * * * * * -->\r\n<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->\r\n<!-- * * * * * * * * * * End of Placeholder * * * * * * * * * * * -->\r\n<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->\r\n"
+        },
+        {
             "name": "GridstackComponent",
-            "id": "component-GridstackComponent-246b293bc233dbb07fb7e3d7f8b08bab",
-            "file": "projects/ng-gridstack/src/components/gridstack.component.ts",
+            "id": "component-GridstackComponent-5fd22d341801a290d0c9948303309c1509afdefe414a8fda9df3f8e5c233696f4020bbdff3f103aecc6aad285740a77d76ee011ce90bc37d19c35cda08851502",
+            "file": "projects/ngx-gridstack/src/components/gridstack.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
             "entryComponents": [],
@@ -53,8 +141,9 @@
                     "name": "gridstack",
                     "deprecated": false,
                     "deprecationMessage": "",
-                    "line": 36,
-                    "type": "GridStackOptions"
+                    "line": 42,
+                    "type": "GridStackOptions",
+                    "decorators": []
                 }
             ],
             "outputsClass": [
@@ -63,7 +152,71 @@
                     "defaultValue": "new EventEmitter<GridStackWidget[]>()",
                     "deprecated": false,
                     "deprecationMessage": "",
-                    "line": 37,
+                    "rawdescription": "\n\nOccurs when widgets change their position/size due to constrain or direct changes\n",
+                    "description": "<p>Occurs when widgets change their position/size due to constrain or direct changes</p>\n",
+                    "line": 46,
+                    "type": "EventEmitter"
+                },
+                {
+                    "name": "onAdded",
+                    "defaultValue": "new EventEmitter<{\r\n        event: Event;\r\n        items: TGridItemEl;\r\n    }>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "rawdescription": "\n\nCalled when widgets are being added to a grid\n",
+                    "description": "<p>Called when widgets are being added to a grid</p>\n",
+                    "line": 50,
+                    "type": "EventEmitter"
+                },
+                {
+                    "name": "onDisable",
+                    "defaultValue": "new EventEmitter<boolean>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 54,
+                    "type": "EventEmitter"
+                },
+                {
+                    "name": "onDragstart",
+                    "defaultValue": "new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "rawdescription": "\n\ncalled when grid item is starting to be dragged\n",
+                    "description": "<p>called when grid item is starting to be dragged</p>\n",
+                    "line": 58,
+                    "type": "EventEmitter"
+                },
+                {
+                    "name": "onDragstop",
+                    "defaultValue": "new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "rawdescription": "\n\ncalled after the user is done moving the item, with updated DOM attributes.\n",
+                    "description": "<p>called after the user is done moving the item, with updated DOM attributes.</p>\n",
+                    "line": 65,
+                    "type": "EventEmitter"
+                },
+                {
+                    "name": "onDropped",
+                    "defaultValue": "new EventEmitter<{\r\n        event: Event;\r\n        previousWidget: TGridItemEl;\r\n        newWidget: TGridItemEl;\r\n    }>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 70,
+                    "type": "EventEmitter"
+                },
+                {
+                    "name": "onResizestart",
+                    "defaultValue": "new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 76,
+                    "type": "EventEmitter"
+                },
+                {
+                    "name": "onResizestop",
+                    "defaultValue": "new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>()",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "line": 81,
                     "type": "EventEmitter"
                 }
             ],
@@ -75,7 +228,7 @@
                     "type": "GridStack",
                     "optional": true,
                     "description": "",
-                    "line": 43,
+                    "line": 90,
                     "modifierKind": [
                         121
                     ]
@@ -88,20 +241,20 @@
                     "type": "GridstackItemComponent[]",
                     "optional": false,
                     "description": "",
-                    "line": 39,
+                    "line": 86,
                     "modifierKind": [
                         121
                     ]
                 },
                 {
                     "name": "makeWidgetDebounce",
-                    "defaultValue": "debounce(() => {\r\n    this.grid?.batchUpdate();\r\n\r\n    const preItem = JSON.stringify(this.getCurrentItems());\r\n\r\n    this.grid?.removeAll();\r\n    this.gridstackItems.forEach((i) => (i.isRegistered = false));\r\n\r\n    this.gridstackItems.forEach((item) => {\r\n      if (!item.isRegistered) {\r\n        this.grid?.makeWidget(item.el.nativeElement);\r\n        item.isRegistered = true;\r\n      }\r\n    });\r\n    this.grid?.commit();\r\n\r\n    const newItems = this.getCurrentItems();\r\n    if (JSON.stringify(this.getCurrentItems()) !== preItem) {\r\n      this.updateChange();\r\n    }\r\n  })",
+                    "defaultValue": "debounce(() => {\r\n        this.grid?.batchUpdate();\r\n\r\n        const preItem = JSON.stringify(this.getCurrentDataItems());\r\n\r\n        this.grid?.removeAll();\r\n        this.gridstackItems.forEach((i) => {\r\n            i.isRegistered = false;\r\n        });\r\n\r\n        this.gridstackItems.forEach((item) => {\r\n            if (!item.isRegistered) {\r\n                this.grid?.makeWidget(item.el.nativeElement);\r\n                item.isRegistered = true;\r\n                item.update();\r\n            }\r\n        });\r\n        this.grid?.commit();\r\n        const newItems = this.getCurrentItems();\r\n        if (JSON.stringify(newItems) !== preItem) {\r\n            this.updateChange();\r\n        }\r\n    })",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "",
                     "optional": false,
                     "description": "",
-                    "line": 45,
+                    "line": 92,
                     "modifierKind": [
                         123
                     ]
@@ -114,7 +267,7 @@
                     "type": "",
                     "optional": false,
                     "description": "",
-                    "line": 34,
+                    "line": 40,
                     "modifierKind": [
                         123
                     ]
@@ -122,16 +275,57 @@
             ],
             "methodsClass": [
                 {
+                    "name": "getCurrentDataItems",
+                    "args": [],
+                    "optional": false,
+                    "returnType": "GridStackWidget[]",
+                    "typeParameters": [],
+                    "line": 126,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "modifierKind": [
+                        121
+                    ]
+                },
+                {
                     "name": "getCurrentItems",
                     "args": [],
                     "optional": false,
                     "returnType": "GridStackWidget[]",
                     "typeParameters": [],
-                    "line": 79,
+                    "line": 135,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "modifierKind": [
                         121
+                    ]
+                },
+                {
+                    "name": "ngOnChanges",
+                    "args": [
+                        {
+                            "name": "changes",
+                            "type": "SimpleChanges",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        }
+                    ],
+                    "optional": false,
+                    "returnType": "void",
+                    "typeParameters": [],
+                    "line": 170,
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "jsdoctags": [
+                        {
+                            "name": "changes",
+                            "type": "SimpleChanges",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
                     ]
                 },
                 {
@@ -140,7 +334,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 115,
+                    "line": 205,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
@@ -157,7 +351,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 67,
+                    "line": 116,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "modifierKind": [
@@ -192,9 +386,9 @@
                         }
                     ],
                     "optional": false,
-                    "returnType": "any",
+                    "returnType": "string | number | undefined",
                     "typeParameters": [],
-                    "line": 97,
+                    "line": 151,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "modifierKind": [
@@ -234,7 +428,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 73,
+                    "line": 122,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "modifierKind": [
@@ -258,7 +452,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 101,
+                    "line": 155,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "modifierKind": [
@@ -273,7 +467,7 @@
             "description": "",
             "rawdescription": "\n",
             "type": "component",
-            "sourceCode": "import {\r\n  ChangeDetectionStrategy,\r\n  Component,\r\n  ElementRef,\r\n  OnInit,\r\n  Output,\r\n  EventEmitter,\r\n  Input,\r\n} from '@angular/core';\r\nimport type {\r\n  GridStackOptions,\r\n  GridStackWidget,\r\n  numberOrString,\r\n} from 'gridstack';\r\nimport { GridStack } from 'gridstack';\r\nimport 'gridstack/dist/gridstack-h5';\r\nimport 'gridstack/dist/h5/gridstack-dd-native';\r\nimport uniqueId from 'lodash/uniqueId';\r\nimport debounce from 'lodash/debounce';\r\n\r\nimport type { GridstackItemComponent } from './gridstack-item.component';\r\n\r\nexport interface HTMLDivElementEx extends HTMLDivElement {\r\n  gsId?: numberOrString;\r\n}\r\n\r\n@Component({\r\n  selector: 'div[gridstack]',\r\n  template: '<ng-content></ng-content>',\r\n  // styleUrls: ['./gridstack.component.scss'],\r\n  changeDetection: ChangeDetectionStrategy.OnPush,\r\n})\r\nexport class GridstackComponent implements OnInit {\r\n  public uid = uniqueId('gridstack');\r\n\r\n  @Input() gridstack?: GridStackOptions;\r\n  @Output() gridItemsChange = new EventEmitter<GridStackWidget[]>();\r\n\r\n  private gridstackItems: GridstackItemComponent[] = [];\r\n\r\n  constructor(private el: ElementRef<HTMLDivElement>) {}\r\n\r\n  private grid?: GridStack;\r\n\r\n  public makeWidgetDebounce = debounce(() => {\r\n    this.grid?.batchUpdate();\r\n\r\n    const preItem = JSON.stringify(this.getCurrentItems());\r\n\r\n    this.grid?.removeAll();\r\n    this.gridstackItems.forEach((i) => (i.isRegistered = false));\r\n\r\n    this.gridstackItems.forEach((item) => {\r\n      if (!item.isRegistered) {\r\n        this.grid?.makeWidget(item.el.nativeElement);\r\n        item.isRegistered = true;\r\n      }\r\n    });\r\n    this.grid?.commit();\r\n\r\n    const newItems = this.getCurrentItems();\r\n    if (JSON.stringify(this.getCurrentItems()) !== preItem) {\r\n      this.updateChange();\r\n    }\r\n  });\r\n\r\n  public registerWidget(gridstackItem: GridstackItemComponent) {\r\n    this.gridstackItems.push(gridstackItem);\r\n    // this.itemsToRegister.push(el);\r\n    this.makeWidgetDebounce();\r\n  }\r\n\r\n  public unregisterWidget(gridstackItem: GridstackItemComponent) {\r\n    this.gridstackItems = this.gridstackItems.filter(\r\n      (i) => i !== gridstackItem\r\n    );\r\n  }\r\n\r\n  private getCurrentItems(): GridStackWidget[] {\r\n    return this.grid\r\n      ?.getGridItems()\r\n      .map((item) => {\r\n        const { gridstackNode } = item;\r\n        const gridStackItem = this.gridstackItems.find(\r\n          (i) => i.el.nativeElement === item\r\n        );\r\n        if (gridStackItem && gridstackNode) {\r\n          const { data } = gridStackItem;\r\n          const { x, y, w, h } = gridstackNode;\r\n          return { ...data, x, y, w, h };\r\n        }\r\n        return undefined;\r\n      })\r\n      .filter((i) => i) as GridStackWidget[];\r\n  }\r\n\r\n  public trackById(idx: number, value: GridStackWidget) {\r\n    return value?.id;\r\n  }\r\n\r\n  private updateChange() {\r\n    if (this.gridItemsChange.observed) {\r\n      const currentItems = this.getCurrentItems();\r\n      this.gridstackItems.forEach((item) => {\r\n        const { id } = item.data;\r\n        const currentItem = currentItems.find((i) => i.id === id);\r\n        if (currentItem) {\r\n          Object.assign(item.data, currentItem);\r\n        }\r\n      });\r\n      this.gridItemsChange.emit(this.getCurrentItems());\r\n    }\r\n  }\r\n\r\n  ngOnInit() {\r\n    this.el.nativeElement.classList.add('grid-stack');\r\n\r\n    const options: GridStackOptions = {\r\n      resizable: {\r\n        autoHide: true,\r\n        handles: 'e, se, s, sw, w, n, ne, nw',\r\n      },\r\n\r\n      ...this.gridstack,\r\n    };\r\n\r\n    this.grid = GridStack.init(options);\r\n    this.grid.on('change', ($event) => this.updateChange());\r\n  }\r\n}\r\n",
+            "sourceCode": "import {\r\n    ChangeDetectionStrategy,\r\n    Component,\r\n    ElementRef,\r\n    OnInit,\r\n    Output,\r\n    EventEmitter,\r\n    Input,\r\n    OnChanges,\r\n    SimpleChanges,\r\n} from '@angular/core';\r\nimport type {\r\n    GridItemHTMLElement,\r\n    GridStackNode,\r\n    GridStackOptions,\r\n    GridStackWidget,\r\n    numberOrString,\r\n} from 'gridstack';\r\nimport { GridStack } from 'gridstack';\r\nimport 'gridstack/dist/gridstack-h5';\r\nimport 'gridstack/dist/h5/gridstack-dd-native';\r\nimport { debounce } from '../utils/debounce';\r\nimport { uniqueId } from '../utils/uniqueId';\r\n\r\nimport type { GridstackItemComponent } from './gridstack-item.component';\r\n\r\nexport interface HTMLDivElementEx extends HTMLDivElement {\r\n    gsId?: numberOrString;\r\n}\r\n\r\ntype TGridItemEl = GridItemHTMLElement | GridStackNode | GridStackNode[] | undefined;\r\n\r\n@Component({\r\n    selector: 'div[gridstack]',\r\n    template: '<ng-content></ng-content>',\r\n    // styleUrls: ['./gridstack.component.scss'],\r\n    changeDetection: ChangeDetectionStrategy.OnPush,\r\n})\r\nexport class GridstackComponent implements OnInit, OnChanges {\r\n    public uid = uniqueId('gridstack');\r\n\r\n    @Input() gridstack?: GridStackOptions;\r\n    /**\r\n     * Occurs when widgets change their position/size due to constrain or direct changes\r\n     */\r\n    @Output() gridItemsChange = new EventEmitter<GridStackWidget[]>();\r\n    /**\r\n     * Called when widgets are being added to a grid\r\n     */\r\n    @Output() onAdded = new EventEmitter<{\r\n        event: Event;\r\n        items: TGridItemEl;\r\n    }>();\r\n    @Output() onDisable = new EventEmitter<boolean>();\r\n    /**\r\n     * called when grid item is starting to be dragged\r\n     */\r\n    @Output() onDragstart = new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>();\r\n    /**\r\n     * called after the user is done moving the item, with updated DOM attributes.\r\n     */\r\n    @Output() onDragstop = new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>();\r\n\r\n    @Output() onDropped = new EventEmitter<{\r\n        event: Event;\r\n        previousWidget: TGridItemEl;\r\n        newWidget: TGridItemEl;\r\n    }>();\r\n\r\n    @Output() onResizestart = new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>();\r\n\r\n    @Output() onResizestop = new EventEmitter<{\r\n        event: Event;\r\n        el: TGridItemEl;\r\n    }>();\r\n\r\n    private gridstackItems: GridstackItemComponent[] = [];\r\n\r\n    constructor(private el: ElementRef<HTMLDivElement>) {}\r\n\r\n    private grid?: GridStack;\r\n\r\n    public makeWidgetDebounce = debounce(() => {\r\n        this.grid?.batchUpdate();\r\n\r\n        const preItem = JSON.stringify(this.getCurrentDataItems());\r\n\r\n        this.grid?.removeAll();\r\n        this.gridstackItems.forEach((i) => {\r\n            i.isRegistered = false;\r\n        });\r\n\r\n        this.gridstackItems.forEach((item) => {\r\n            if (!item.isRegistered) {\r\n                this.grid?.makeWidget(item.el.nativeElement);\r\n                item.isRegistered = true;\r\n                item.update();\r\n            }\r\n        });\r\n        this.grid?.commit();\r\n        const newItems = this.getCurrentItems();\r\n        if (JSON.stringify(newItems) !== preItem) {\r\n            this.updateChange();\r\n        }\r\n    });\r\n\r\n    public registerWidget(gridstackItem: GridstackItemComponent): void {\r\n        if (!this.gridstackItems.includes(gridstackItem)) {\r\n            this.gridstackItems.push(gridstackItem);\r\n        }\r\n    }\r\n\r\n    public unregisterWidget(gridstackItem: GridstackItemComponent): void {\r\n        this.gridstackItems = this.gridstackItems.filter((i) => i !== gridstackItem);\r\n    }\r\n\r\n    private getCurrentDataItems(): GridStackWidget[] {\r\n        return (this.gridstackItems || [])\r\n            .map((item) => {\r\n                const { data } = item;\r\n                return data;\r\n            })\r\n            .filter((i) => i) as GridStackWidget[];\r\n    }\r\n\r\n    private getCurrentItems(): GridStackWidget[] {\r\n        return this.grid\r\n            ?.getGridItems()\r\n            .map((item) => {\r\n                const { gridstackNode } = item;\r\n                const gridStackItem = this.gridstackItems.find((i) => i.el.nativeElement === item);\r\n                if (gridStackItem && gridstackNode) {\r\n                    const { data } = gridStackItem;\r\n                    const { x, y, w, h } = gridstackNode;\r\n                    return { ...data, x, y, w, h };\r\n                }\r\n                return undefined;\r\n            })\r\n            .filter((i) => i) as GridStackWidget[];\r\n    }\r\n\r\n    public trackById(idx: number, value: GridStackWidget): string | number | undefined {\r\n        return value?.id;\r\n    }\r\n\r\n    private updateChange(): void {\r\n        const currentItems = this.getCurrentItems();\r\n        if (this.gridItemsChange.observed) {\r\n            this.gridItemsChange.emit(currentItems);\r\n        } else {\r\n            this.gridstackItems.forEach((item) => {\r\n                const { id } = item.data;\r\n                const currentItem = currentItems.find((i) => i.id === id);\r\n                if (currentItem) {\r\n                    Object.assign(item.data, currentItem);\r\n                }\r\n            });\r\n        }\r\n    }\r\n\r\n    ngOnChanges(changes: SimpleChanges): void {\r\n        if (changes.gridstack) {\r\n            if (this.grid) {\r\n                this.grid.off('change');\r\n\r\n                this.grid.destroy(false);\r\n            }\r\n            this.grid = GridStack.init(\r\n                {\r\n                    resizable: {\r\n                        autoHide: true,\r\n                        handles: 'e, se, s, sw, w, n, ne, nw',\r\n                    },\r\n                    ...changes.gridstack.currentValue,\r\n                },\r\n                this.el.nativeElement,\r\n            );\r\n\r\n            // Events\r\n            this.grid.on('change', () => this.updateChange());\r\n            this.grid.on('added', (event, items) => this.onAdded.emit({ event, items }));\r\n            this.grid.on('disable', () => this.onDisable.emit(true));\r\n            this.grid.on('enable', () => this.onDisable.emit(false));\r\n            this.grid.on('dragstart', (event, el) => this.onDragstart.emit({ event, el }));\r\n            this.grid.on('dragstop', (event, el) => this.onDragstop.emit({ event, el }));\r\n            this.grid.on('dropped', (event, previousWidget, newWidget) =>\r\n                this.onDropped.emit({ event, previousWidget, newWidget }),\r\n            );\r\n            this.grid.on('resizestart', (event, el) => this.onResizestart.emit({ event, el }));\r\n            this.grid.on('resizestop', (event, el) => this.onResizestop.emit({ event, el }));\r\n\r\n            this.makeWidgetDebounce();\r\n        }\r\n    }\r\n\r\n    ngOnInit(): void {\r\n        this.el.nativeElement.classList.add('grid-stack');\r\n    }\r\n}\r\n",
             "assetsDirs": [],
             "styleUrlsData": "",
             "stylesData": "",
@@ -290,7 +484,7 @@
                         "deprecationMessage": ""
                     }
                 ],
-                "line": 39,
+                "line": 86,
                 "jsdoctags": [
                     {
                         "name": "el",
@@ -304,13 +498,14 @@
                 ]
             },
             "implements": [
-                "OnInit"
+                "OnInit",
+                "OnChanges"
             ]
         },
         {
             "name": "GridstackItemComponent",
-            "id": "component-GridstackItemComponent-80286bd1031db5cc7edcd29247afe359",
-            "file": "projects/ng-gridstack/src/components/gridstack-item.component.ts",
+            "id": "component-GridstackItemComponent-1319630c463979e96d92ccdacc0e6e9849281550e0c83ce7d545f01805fde222e074fb56ce5a6ab991c7c0e6902a9b354bdced7f7245b113efb1024a7a2a13ad",
+            "file": "projects/ngx-gridstack/src/components/gridstack-item.component.ts",
             "changeDetection": "ChangeDetectionStrategy.OnPush",
             "encapsulation": [],
             "entryComponents": [],
@@ -320,17 +515,17 @@
             "selector": "div[gridstackItem]",
             "styleUrls": [],
             "styles": [],
-            "templateUrl": [
-                "./gridstack-item.component.html"
-            ],
+            "template": "<ng-content></ng-content>",
+            "templateUrl": [],
             "viewProviders": [],
             "inputsClass": [
                 {
                     "name": "data",
                     "deprecated": false,
                     "deprecationMessage": "",
-                    "line": 25,
-                    "type": "GridStackWidget"
+                    "line": 30,
+                    "type": "GridStackWidget",
+                    "decorators": []
                 }
             ],
             "outputsClass": [],
@@ -355,7 +550,7 @@
                     "type": "",
                     "optional": false,
                     "description": "",
-                    "line": 27,
+                    "line": 32,
                     "modifierKind": [
                         123
                     ]
@@ -375,7 +570,7 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 55,
+                    "line": 57,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "jsdoctags": [
@@ -396,19 +591,22 @@
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 61,
+                    "line": 63,
                     "deprecated": false,
                     "deprecationMessage": ""
                 },
                 {
-                    "name": "ngOnInit",
+                    "name": "update",
                     "args": [],
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 64,
+                    "line": 26,
                     "deprecated": false,
-                    "deprecationMessage": ""
+                    "deprecationMessage": "",
+                    "modifierKind": [
+                        123
+                    ]
                 },
                 {
                     "name": "updateGridAttr",
@@ -418,13 +616,13 @@
                             "type": "GridStackWidget",
                             "deprecated": false,
                             "deprecationMessage": "",
-                            "defaultValue": "{}"
+                            "defaultValue": "this.data"
                         }
                     ],
                     "optional": false,
                     "returnType": "void",
                     "typeParameters": [],
-                    "line": 29,
+                    "line": 34,
                     "deprecated": false,
                     "deprecationMessage": "",
                     "modifierKind": [
@@ -436,7 +634,7 @@
                             "type": "GridStackWidget",
                             "deprecated": false,
                             "deprecationMessage": "",
-                            "defaultValue": "{}",
+                            "defaultValue": "this.data",
                             "tagName": {
                                 "text": "param"
                             }
@@ -451,7 +649,7 @@
             "description": "",
             "rawdescription": "\n",
             "type": "component",
-            "sourceCode": "import {\r\n  ChangeDetectionStrategy,\r\n  Component,\r\n  ElementRef,\r\n  Input,\r\n  OnChanges,\r\n  OnDestroy,\r\n  OnInit,\r\n  SimpleChanges,\r\n} from '@angular/core';\r\nimport type { GridStackWidget } from 'gridstack';\r\nimport { GridstackComponent, HTMLDivElementEx } from './gridstack.component';\r\n\r\n@Component({\r\n  selector: 'div[gridstackItem]',\r\n  templateUrl: './gridstack-item.component.html',\r\n  changeDetection: ChangeDetectionStrategy.OnPush,\r\n})\r\nexport class GridstackItemComponent implements OnInit, OnChanges, OnDestroy {\r\n  constructor(\r\n    private gridStack: GridstackComponent,\r\n    public el: ElementRef<HTMLDivElementEx>\r\n  ) {}\r\n\r\n  @Input() data!: GridStackWidget;\r\n\r\n  public isRegistered = false;\r\n\r\n  public updateGridAttr(data: GridStackWidget = {}) {\r\n    this.el.nativeElement.setAttribute('gs-w', `${data.w || 1}`);\r\n    this.el.nativeElement.setAttribute('gs-h', `${data.h || 1}`);\r\n    this.el.nativeElement.setAttribute('gs-x', `${data.x || 0}`);\r\n    this.el.nativeElement.setAttribute('gs-y', `${data.y || 0}`);\r\n    data.minH\r\n      ? this.el.nativeElement.setAttribute('gs-min-h', `${data.minH}`)\r\n      : this.el.nativeElement.removeAttribute('gs-min-h');\r\n    data.maxH\r\n      ? this.el.nativeElement.setAttribute('gs-max-h', `${data.maxH}`)\r\n      : this.el.nativeElement.removeAttribute('gs-max-h');\r\n    data.minW\r\n      ? this.el.nativeElement.setAttribute('gs-min-w', `${data.minW}`)\r\n      : this.el.nativeElement.removeAttribute('gs-min-w');\r\n    data.maxW\r\n      ? this.el.nativeElement.setAttribute('gs-max-w', `${data.maxW}`)\r\n      : this.el.nativeElement.removeAttribute('gs-max-w');\r\n\r\n    if (!this.isRegistered) {\r\n      this.gridStack.registerWidget(this);\r\n      // this.isRegistered = true;\r\n    } else {\r\n      this.gridStack.makeWidgetDebounce();\r\n    }\r\n  }\r\n\r\n  ngOnChanges(change: SimpleChanges) {\r\n    if (change.data) {\r\n      const { currentValue } = change.data;\r\n      this.updateGridAttr(currentValue);\r\n    }\r\n  }\r\n  ngOnDestroy(): void {\r\n    this.gridStack.unregisterWidget(this);\r\n  }\r\n  ngOnInit() {}\r\n}\r\n",
+            "sourceCode": "import {\r\n    ChangeDetectionStrategy,\r\n    ChangeDetectorRef,\r\n    Component,\r\n    ElementRef,\r\n    Input,\r\n    OnChanges,\r\n    OnDestroy,\r\n    SimpleChanges,\r\n} from '@angular/core';\r\nimport type { GridStackWidget } from 'gridstack';\r\nimport { GridstackComponent, HTMLDivElementEx } from './gridstack.component';\r\n\r\n@Component({\r\n    selector: 'div[gridstackItem]',\r\n    template: '<ng-content></ng-content>',\r\n    changeDetection: ChangeDetectionStrategy.OnPush,\r\n})\r\nexport class GridstackItemComponent implements OnChanges, OnDestroy {\r\n    constructor(\r\n        private gridStack: GridstackComponent,\r\n        public el: ElementRef<HTMLDivElementEx>,\r\n        private cdr: ChangeDetectorRef,\r\n    ) {}\r\n\r\n    public update(): void {\r\n        this.cdr.detectChanges();\r\n    }\r\n\r\n    @Input() data!: GridStackWidget;\r\n\r\n    public isRegistered = false;\r\n\r\n    public updateGridAttr(data: GridStackWidget = this.data): void {\r\n        this.el.nativeElement.setAttribute('gs-w', `${data.w || 1}`);\r\n        this.el.nativeElement.setAttribute('gs-h', `${data.h || 1}`);\r\n        this.el.nativeElement.setAttribute('gs-x', `${data.x || 0}`);\r\n        this.el.nativeElement.setAttribute('gs-y', `${data.y || 0}`);\r\n        if (data.minH) this.el.nativeElement.setAttribute('gs-min-h', `${data.minH}`);\r\n        else this.el.nativeElement.removeAttribute('gs-min-h');\r\n\r\n        if (data.maxH) this.el.nativeElement.setAttribute('gs-max-h', `${data.maxH}`);\r\n        else this.el.nativeElement.removeAttribute('gs-max-h');\r\n\r\n        if (data.minW) this.el.nativeElement.setAttribute('gs-min-w', `${data.minW}`);\r\n        else this.el.nativeElement.removeAttribute('gs-min-w');\r\n\r\n        if (data.maxW) this.el.nativeElement.setAttribute('gs-max-w', `${data.maxW}`);\r\n        else this.el.nativeElement.removeAttribute('gs-max-w');\r\n\r\n        if (!this.isRegistered) {\r\n            this.gridStack.registerWidget(this);\r\n        }\r\n        this.gridStack.makeWidgetDebounce();\r\n    }\r\n\r\n    ngOnChanges(change: SimpleChanges): void {\r\n        if (change.data) {\r\n            const { currentValue } = change.data;\r\n            this.updateGridAttr(currentValue);\r\n        }\r\n    }\r\n    ngOnDestroy(): void {\r\n        this.gridStack.unregisterWidget(this);\r\n    }\r\n}\r\n",
             "assetsDirs": [],
             "styleUrlsData": "",
             "stylesData": "",
@@ -470,6 +668,12 @@
                     {
                         "name": "el",
                         "type": "ElementRef<HTMLDivElementEx>",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "cdr",
+                        "type": "ChangeDetectorRef",
                         "deprecated": false,
                         "deprecationMessage": ""
                     }
@@ -493,27 +697,114 @@
                         "tagName": {
                             "text": "param"
                         }
+                    },
+                    {
+                        "name": "cdr",
+                        "type": "ChangeDetectorRef",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
                     }
                 ]
             },
             "implements": [
-                "OnInit",
                 "OnChanges",
                 "OnDestroy"
-            ],
-            "templateData": "<ng-content></ng-content>\r\n"
+            ]
         }
     ],
     "modules": [
         {
-            "name": "NgGridstackModule",
-            "id": "module-NgGridstackModule-463f4053ca51023eb795fd08ec350692",
+            "name": "AppModule",
+            "id": "module-AppModule-22696f625604b93d7238cc310e63fa5e8b7f3c3bdf8388bd7219717131f354a6998deb33a1f1a6f005b8397e100ab438a4f4417a01b63342e185975f62e1cf8f",
             "description": "",
             "deprecationMessage": "",
             "deprecated": false,
-            "file": "projects/ng-gridstack/src/components/gridstack.module.ts",
+            "file": "src/app/app.module.ts",
             "methods": [],
-            "sourceCode": "import { CommonModule } from '@angular/common';\nimport { NgModule } from '@angular/core';\n\nimport { GridstackItemComponent } from './gridstack-item.component';\nimport { GridstackComponent } from './gridstack.component';\n\n@NgModule({\n  declarations: [GridstackComponent, GridstackItemComponent],\n  imports: [CommonModule],\n  exports: [GridstackComponent, GridstackItemComponent],\n})\nexport class NgGridstackModule {}\n",
+            "sourceCode": "import { NgModule } from '@angular/core';\r\nimport { BrowserModule } from '@angular/platform-browser';\r\n\r\nimport { AppComponent } from './app.component';\r\n\r\n@NgModule({\r\n    declarations: [AppComponent],\r\n    imports: [BrowserModule],\r\n    providers: [],\r\n    bootstrap: [AppComponent],\r\n})\r\nexport class AppModule {}\r\n",
+            "children": [
+                {
+                    "type": "providers",
+                    "elements": []
+                },
+                {
+                    "type": "declarations",
+                    "elements": [
+                        {
+                            "name": "AppComponent"
+                        }
+                    ]
+                },
+                {
+                    "type": "imports",
+                    "elements": []
+                },
+                {
+                    "type": "exports",
+                    "elements": []
+                },
+                {
+                    "type": "bootstrap",
+                    "elements": [
+                        {
+                            "name": "AppComponent"
+                        }
+                    ]
+                },
+                {
+                    "type": "classes",
+                    "elements": []
+                }
+            ]
+        },
+        {
+            "name": "JsonPipeModule",
+            "id": "module-JsonPipeModule-5e3c03e277a7e6d652aedbe8433a12432b6dc4a08034c6ab1fbe9cf97ab408fa5b843329e67a636a185c30c338ebc86cfc5211db47ed6718aa911f5478701d35",
+            "description": "",
+            "deprecationMessage": "",
+            "deprecated": false,
+            "file": "projects/ngx-gridstack/src/pipe/json.module.ts",
+            "methods": [],
+            "sourceCode": "import { CommonModule, JsonPipe } from '@angular/common';\r\nimport { NgModule } from '@angular/core';\r\n\r\n@NgModule({\r\n    declarations: [JsonPipe],\r\n    imports: [CommonModule],\r\n    exports: [JsonPipe],\r\n})\r\nexport class JsonPipeModule {}\r\n",
+            "children": [
+                {
+                    "type": "providers",
+                    "elements": []
+                },
+                {
+                    "type": "declarations",
+                    "elements": []
+                },
+                {
+                    "type": "imports",
+                    "elements": []
+                },
+                {
+                    "type": "exports",
+                    "elements": []
+                },
+                {
+                    "type": "bootstrap",
+                    "elements": []
+                },
+                {
+                    "type": "classes",
+                    "elements": []
+                }
+            ]
+        },
+        {
+            "name": "NgGridstackModule",
+            "id": "module-NgGridstackModule-c1875194bd65f0a225d23ad968b9e40adc6006f42d3b150953ac2b63f86f76e3baf00a879b2606f3ddf75d6bd8c420506e0db2805742dd0d8b60e1872198998c",
+            "description": "",
+            "deprecationMessage": "",
+            "deprecated": false,
+            "file": "projects/ngx-gridstack/src/components/gridstack.module.ts",
+            "methods": [],
+            "sourceCode": "import { CommonModule } from '@angular/common';\r\nimport { NgModule } from '@angular/core';\r\n\r\nimport { GridstackItemComponent } from './gridstack-item.component';\r\nimport { GridstackComponent } from './gridstack.component';\r\n\r\n@NgModule({\r\n    declarations: [GridstackComponent, GridstackItemComponent],\r\n    imports: [CommonModule],\r\n    exports: [GridstackComponent, GridstackItemComponent],\r\n})\r\nexport class NgGridstackModule {}\r\n",
             "children": [
                 {
                     "type": "providers",
@@ -559,55 +850,414 @@
     "miscellaneous": {
         "variables": [
             {
+                "name": "CanvasContent",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "",
+                "defaultValue": "TemplateContainer.bind({})"
+            },
+            {
                 "name": "context",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/ng-gridstack/src/test.ts",
+                "file": "src/test.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "",
                 "defaultValue": "require.context('./', true, /\\.spec\\.ts$/)"
             },
             {
+                "name": "context",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/test.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "",
+                "defaultValue": "require.context('./', true, /\\.spec\\.ts$/)"
+            },
+            {
+                "name": "CustomHandler",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "",
+                "defaultValue": "TemplateWithHandler.bind({})"
+            },
+            {
                 "name": "Default",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/ng-gridstack/src/components/gridstack.component.stories.ts",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "",
                 "defaultValue": "Template.bind({})"
             },
             {
+                "name": "defOpts",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "object",
+                "defaultValue": "{\r\n    args: {\r\n        items: [\r\n            {\r\n                id: 1,\r\n                x: 2,\r\n                y: 0,\r\n                minW: 2,\r\n            },\r\n            {\r\n                id: 2,\r\n                x: 4,\r\n                y: 0,\r\n            },\r\n            {\r\n                id: 3,\r\n                x: 5,\r\n                y: 2,\r\n            },\r\n        ],\r\n        gridstack: {\r\n            margin: 10,\r\n            disableDrag: false,\r\n            disableResize: false,\r\n            auto: true,\r\n            float: true,\r\n            animate: true,\r\n        } as GridStackOptions,\r\n    },\r\n}"
+            },
+            {
+                "name": "environment",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/environments/environment.prod.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "object",
+                "defaultValue": "{\r\n    production: true,\r\n}"
+            },
+            {
+                "name": "environment",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "src/environments/environment.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "object",
+                "defaultValue": "{\r\n    production: false,\r\n}"
+            },
+            {
+                "name": "Events",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "",
+                "defaultValue": "TemplateEvents.bind({})"
+            },
+            {
+                "name": "NoAminate",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "",
+                "defaultValue": "Template.bind({})"
+            },
+            {
+                "name": "NoFloat",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "",
+                "defaultValue": "TemplateContainer.bind({})"
+            },
+            {
                 "name": "require",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/ng-gridstack/src/test.ts",
+                "file": "src/test.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "literal type"
             },
             {
+                "name": "require",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/test.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "literal type"
+            },
+            {
+                "name": "StaticGrid",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "",
+                "defaultValue": "TemplateContainer.bind({})"
+            },
+            {
                 "name": "Template",
                 "ctype": "miscellaneous",
                 "subtype": "variable",
-                "file": "projects/ng-gridstack/src/components/gridstack.component.stories.ts",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
                 "deprecated": false,
                 "deprecationMessage": "",
                 "type": "Story<GridstackComponent>",
-                "defaultValue": "(props) => ({\r\n  props,\r\n  template: `\r\n    <div gridstack #gridStack (gridItemsChange)=\"gridItemsChange($event)\">\r\n      <div gridstackItem [data]=\"item\" *ngFor=\"let item of items; trackBy:gridStack.trackById \">\r\n        <div class=\"grid-stack-item-content\">Item <div>{{item | json}}</div>\r\n      </div>\r\n    </div>`,\r\n})"
+                "defaultValue": "(props) => ({\r\n    props,\r\n    styles: [\r\n        `.grid-stack-item-content {\r\n    font-size: 10px;\r\n  }`,\r\n    ],\r\n    template: `\r\n    <div [gridstack]=\"gridstack\" #gridStack (gridItemsChange)=\"gridItemsChange($event); items = $event;\">\r\n      <div gridstackItem [data]=\"item\" *ngFor=\"let item of items; trackBy:gridStack.trackById \">\r\n        <div class=\"grid-stack-item-content\">Item <div>{{item | json}}</div>\r\n      </div>\r\n    </div>`,\r\n})"
+            },
+            {
+                "name": "TemplateContainer",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story<GridstackComponent>",
+                "defaultValue": "(props) => ({\r\n    props,\r\n    styles: [\r\n        `.grid-stack-item-content {\r\n      font-size: 10px;\r\n    }\r\n    .grid-stack {\r\n      background: yellow;\r\n    }\r\n  `,\r\n    ],\r\n    template: `\r\n    <div [gridstack]=\"gridstack\" #gridStack (gridItemsChange)=\"gridItemsChange($event); items = $event;\">\r\n      <div gridstackItem [data]=\"item\" *ngFor=\"let item of items; trackBy:gridStack.trackById \">\r\n        <div class=\"grid-stack-item-content\">\r\n        Item <div>{{item | json}}</div>\r\n      </div>\r\n    </div>`,\r\n})"
+            },
+            {
+                "name": "TemplateEvents",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story<GridstackComponent>",
+                "defaultValue": "(props) => ({\r\n    props,\r\n    styles: [\r\n        `.grid-stack-item-content {\r\n      font-size: 10px;\r\n    }\r\n    .grid-stack {\r\n      background: yellow;\r\n    }\r\n  `,\r\n    ],\r\n    template: `\r\n    <div [gridstack]=\"gridstack\" #gridStack\r\n      (onAdded)=\"onAdded($event | safeJson)\"\r\n      (onDisable)=\"onDisable($event | safeJson)\"\r\n      (onDragstart)=\"onDragstart($event | safeJson)\"\r\n      (onDragstop)=\"onDragstop($event | safeJson)\"\r\n      (onDropped)=\"onDropped($event | safeJson)\"\r\n      (onResizestart)=\"onResizestart($event | safeJson)\"\r\n      (onResizestop)=\"onResizestop($event | safeJson)\"\r\n      (gridItemsChange)=\"gridItemsChange($event | safeJson); items = $event;\"\r\n    >\r\n      <div gridstackItem [data]=\"item\" *ngFor=\"let item of items; trackBy:gridStack.trackById \">\r\n        <div class=\"grid-stack-item-content\">\r\n        Item <div>{{item | safeJson}}</div>\r\n      </div>\r\n    </div>`,\r\n})"
+            },
+            {
+                "name": "TemplateWithHandler",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "Story<GridstackComponent>",
+                "defaultValue": "(props) => ({\r\n    props,\r\n    styles: [\r\n        `.grid-stack-item-content {\r\n    font-size: 10px;\r\n  }\r\n  .handler {\r\n    width:20px;\r\n    height: 20px;\r\n    position:absolute;\r\n    left: 0;\r\n    background: green;\r\n    top:0;\r\n    z-index: 1;\r\n    cursor: pointer;\r\n  }`,\r\n    ],\r\n    template: `\r\n    <div [gridstack]=\"gridstack\" #gridStack (gridItemsChange)=\"gridItemsChange($event); items = $event;\">\r\n      <div gridstackItem [data]=\"item\" *ngFor=\"let item of items; trackBy:gridStack.trackById \">\r\n        <div class=\"grid-stack-item-content\">\r\n          <div class=\"handler\"></div>\r\n        Item <div>{{item | json}}</div>\r\n      </div>\r\n    </div>`,\r\n})"
+            },
+            {
+                "name": "uid",
+                "ctype": "miscellaneous",
+                "subtype": "variable",
+                "file": "projects/ngx-gridstack/src/utils/uniqueId.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "type": "number",
+                "defaultValue": "0"
             }
         ],
-        "functions": [],
-        "typealiases": [],
+        "functions": [
+            {
+                "name": "debounce",
+                "file": "projects/ngx-gridstack/src/utils/debounce.ts",
+                "ctype": "miscellaneous",
+                "subtype": "function",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "description": "",
+                "args": [
+                    {
+                        "name": "callback",
+                        "deprecated": false,
+                        "deprecationMessage": ""
+                    },
+                    {
+                        "name": "wait",
+                        "type": "number",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "defaultValue": "0"
+                    }
+                ],
+                "returnType": "Promise<U>",
+                "jsdoctags": [
+                    {
+                        "name": "callback",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    },
+                    {
+                        "name": "wait",
+                        "type": "number",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "defaultValue": "0",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            },
+            {
+                "name": "uniqueId",
+                "file": "projects/ngx-gridstack/src/utils/uniqueId.ts",
+                "ctype": "miscellaneous",
+                "subtype": "function",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "description": "",
+                "args": [
+                    {
+                        "name": "pfx",
+                        "type": "string",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "defaultValue": "''"
+                    }
+                ],
+                "returnType": "string",
+                "jsdoctags": [
+                    {
+                        "name": "pfx",
+                        "type": "string",
+                        "deprecated": false,
+                        "deprecationMessage": "",
+                        "defaultValue": "''",
+                        "tagName": {
+                            "text": "param"
+                        }
+                    }
+                ]
+            }
+        ],
+        "typealiases": [
+            {
+                "name": "TGridItemEl",
+                "ctype": "miscellaneous",
+                "subtype": "typealias",
+                "rawtype": "GridItemHTMLElement | GridStackNode | GridStackNode[] | undefined",
+                "file": "projects/ngx-gridstack/src/components/gridstack.component.ts",
+                "deprecated": false,
+                "deprecationMessage": "",
+                "description": "",
+                "kind": 186
+            }
+        ],
         "enumerations": [],
         "groupedVariables": {
-            "projects/ng-gridstack/src/test.ts": [
+            "projects/ngx-gridstack/src/components/gridstack.component.stories.ts": [
+                {
+                    "name": "CanvasContent",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "defaultValue": "TemplateContainer.bind({})"
+                },
+                {
+                    "name": "CustomHandler",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "defaultValue": "TemplateWithHandler.bind({})"
+                },
+                {
+                    "name": "Default",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "defaultValue": "Template.bind({})"
+                },
+                {
+                    "name": "defOpts",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "object",
+                    "defaultValue": "{\r\n    args: {\r\n        items: [\r\n            {\r\n                id: 1,\r\n                x: 2,\r\n                y: 0,\r\n                minW: 2,\r\n            },\r\n            {\r\n                id: 2,\r\n                x: 4,\r\n                y: 0,\r\n            },\r\n            {\r\n                id: 3,\r\n                x: 5,\r\n                y: 2,\r\n            },\r\n        ],\r\n        gridstack: {\r\n            margin: 10,\r\n            disableDrag: false,\r\n            disableResize: false,\r\n            auto: true,\r\n            float: true,\r\n            animate: true,\r\n        } as GridStackOptions,\r\n    },\r\n}"
+                },
+                {
+                    "name": "Events",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "defaultValue": "TemplateEvents.bind({})"
+                },
+                {
+                    "name": "NoAminate",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "defaultValue": "Template.bind({})"
+                },
+                {
+                    "name": "NoFloat",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "defaultValue": "TemplateContainer.bind({})"
+                },
+                {
+                    "name": "StaticGrid",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "",
+                    "defaultValue": "TemplateContainer.bind({})"
+                },
+                {
+                    "name": "Template",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story<GridstackComponent>",
+                    "defaultValue": "(props) => ({\r\n    props,\r\n    styles: [\r\n        `.grid-stack-item-content {\r\n    font-size: 10px;\r\n  }`,\r\n    ],\r\n    template: `\r\n    <div [gridstack]=\"gridstack\" #gridStack (gridItemsChange)=\"gridItemsChange($event); items = $event;\">\r\n      <div gridstackItem [data]=\"item\" *ngFor=\"let item of items; trackBy:gridStack.trackById \">\r\n        <div class=\"grid-stack-item-content\">Item <div>{{item | json}}</div>\r\n      </div>\r\n    </div>`,\r\n})"
+                },
+                {
+                    "name": "TemplateContainer",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story<GridstackComponent>",
+                    "defaultValue": "(props) => ({\r\n    props,\r\n    styles: [\r\n        `.grid-stack-item-content {\r\n      font-size: 10px;\r\n    }\r\n    .grid-stack {\r\n      background: yellow;\r\n    }\r\n  `,\r\n    ],\r\n    template: `\r\n    <div [gridstack]=\"gridstack\" #gridStack (gridItemsChange)=\"gridItemsChange($event); items = $event;\">\r\n      <div gridstackItem [data]=\"item\" *ngFor=\"let item of items; trackBy:gridStack.trackById \">\r\n        <div class=\"grid-stack-item-content\">\r\n        Item <div>{{item | json}}</div>\r\n      </div>\r\n    </div>`,\r\n})"
+                },
+                {
+                    "name": "TemplateEvents",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story<GridstackComponent>",
+                    "defaultValue": "(props) => ({\r\n    props,\r\n    styles: [\r\n        `.grid-stack-item-content {\r\n      font-size: 10px;\r\n    }\r\n    .grid-stack {\r\n      background: yellow;\r\n    }\r\n  `,\r\n    ],\r\n    template: `\r\n    <div [gridstack]=\"gridstack\" #gridStack\r\n      (onAdded)=\"onAdded($event | safeJson)\"\r\n      (onDisable)=\"onDisable($event | safeJson)\"\r\n      (onDragstart)=\"onDragstart($event | safeJson)\"\r\n      (onDragstop)=\"onDragstop($event | safeJson)\"\r\n      (onDropped)=\"onDropped($event | safeJson)\"\r\n      (onResizestart)=\"onResizestart($event | safeJson)\"\r\n      (onResizestop)=\"onResizestop($event | safeJson)\"\r\n      (gridItemsChange)=\"gridItemsChange($event | safeJson); items = $event;\"\r\n    >\r\n      <div gridstackItem [data]=\"item\" *ngFor=\"let item of items; trackBy:gridStack.trackById \">\r\n        <div class=\"grid-stack-item-content\">\r\n        Item <div>{{item | safeJson}}</div>\r\n      </div>\r\n    </div>`,\r\n})"
+                },
+                {
+                    "name": "TemplateWithHandler",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "Story<GridstackComponent>",
+                    "defaultValue": "(props) => ({\r\n    props,\r\n    styles: [\r\n        `.grid-stack-item-content {\r\n    font-size: 10px;\r\n  }\r\n  .handler {\r\n    width:20px;\r\n    height: 20px;\r\n    position:absolute;\r\n    left: 0;\r\n    background: green;\r\n    top:0;\r\n    z-index: 1;\r\n    cursor: pointer;\r\n  }`,\r\n    ],\r\n    template: `\r\n    <div [gridstack]=\"gridstack\" #gridStack (gridItemsChange)=\"gridItemsChange($event); items = $event;\">\r\n      <div gridstackItem [data]=\"item\" *ngFor=\"let item of items; trackBy:gridStack.trackById \">\r\n        <div class=\"grid-stack-item-content\">\r\n          <div class=\"handler\"></div>\r\n        Item <div>{{item | json}}</div>\r\n      </div>\r\n    </div>`,\r\n})"
+                }
+            ],
+            "src/test.ts": [
                 {
                     "name": "context",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/ng-gridstack/src/test.ts",
+                    "file": "src/test.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "",
@@ -617,38 +1267,167 @@
                     "name": "require",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/ng-gridstack/src/test.ts",
+                    "file": "src/test.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "literal type"
                 }
             ],
-            "projects/ng-gridstack/src/components/gridstack.component.stories.ts": [
+            "projects/ngx-gridstack/src/test.ts": [
                 {
-                    "name": "Default",
+                    "name": "context",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/ng-gridstack/src/components/gridstack.component.stories.ts",
+                    "file": "projects/ngx-gridstack/src/test.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
                     "type": "",
-                    "defaultValue": "Template.bind({})"
+                    "defaultValue": "require.context('./', true, /\\.spec\\.ts$/)"
                 },
                 {
-                    "name": "Template",
+                    "name": "require",
                     "ctype": "miscellaneous",
                     "subtype": "variable",
-                    "file": "projects/ng-gridstack/src/components/gridstack.component.stories.ts",
+                    "file": "projects/ngx-gridstack/src/test.ts",
                     "deprecated": false,
                     "deprecationMessage": "",
-                    "type": "Story<GridstackComponent>",
-                    "defaultValue": "(props) => ({\r\n  props,\r\n  template: `\r\n    <div gridstack #gridStack (gridItemsChange)=\"gridItemsChange($event)\">\r\n      <div gridstackItem [data]=\"item\" *ngFor=\"let item of items; trackBy:gridStack.trackById \">\r\n        <div class=\"grid-stack-item-content\">Item <div>{{item | json}}</div>\r\n      </div>\r\n    </div>`,\r\n})"
+                    "type": "literal type"
+                }
+            ],
+            "src/environments/environment.prod.ts": [
+                {
+                    "name": "environment",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/environments/environment.prod.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "object",
+                    "defaultValue": "{\r\n    production: true,\r\n}"
+                }
+            ],
+            "src/environments/environment.ts": [
+                {
+                    "name": "environment",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "src/environments/environment.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "object",
+                    "defaultValue": "{\r\n    production: false,\r\n}"
+                }
+            ],
+            "projects/ngx-gridstack/src/utils/uniqueId.ts": [
+                {
+                    "name": "uid",
+                    "ctype": "miscellaneous",
+                    "subtype": "variable",
+                    "file": "projects/ngx-gridstack/src/utils/uniqueId.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "type": "number",
+                    "defaultValue": "0"
                 }
             ]
         },
-        "groupedFunctions": {},
+        "groupedFunctions": {
+            "projects/ngx-gridstack/src/utils/debounce.ts": [
+                {
+                    "name": "debounce",
+                    "file": "projects/ngx-gridstack/src/utils/debounce.ts",
+                    "ctype": "miscellaneous",
+                    "subtype": "function",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "description": "",
+                    "args": [
+                        {
+                            "name": "callback",
+                            "deprecated": false,
+                            "deprecationMessage": ""
+                        },
+                        {
+                            "name": "wait",
+                            "type": "number",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "defaultValue": "0"
+                        }
+                    ],
+                    "returnType": "Promise<U>",
+                    "jsdoctags": [
+                        {
+                            "name": "callback",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        },
+                        {
+                            "name": "wait",
+                            "type": "number",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "defaultValue": "0",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "projects/ngx-gridstack/src/utils/uniqueId.ts": [
+                {
+                    "name": "uniqueId",
+                    "file": "projects/ngx-gridstack/src/utils/uniqueId.ts",
+                    "ctype": "miscellaneous",
+                    "subtype": "function",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "description": "",
+                    "args": [
+                        {
+                            "name": "pfx",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "defaultValue": "''"
+                        }
+                    ],
+                    "returnType": "string",
+                    "jsdoctags": [
+                        {
+                            "name": "pfx",
+                            "type": "string",
+                            "deprecated": false,
+                            "deprecationMessage": "",
+                            "defaultValue": "''",
+                            "tagName": {
+                                "text": "param"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
         "groupedEnumerations": {},
-        "groupedTypeAliases": {}
+        "groupedTypeAliases": {
+            "projects/ngx-gridstack/src/components/gridstack.component.ts": [
+                {
+                    "name": "TGridItemEl",
+                    "ctype": "miscellaneous",
+                    "subtype": "typealias",
+                    "rawtype": "GridItemHTMLElement | GridStackNode | GridStackNode[] | undefined",
+                    "file": "projects/ngx-gridstack/src/components/gridstack.component.ts",
+                    "deprecated": false,
+                    "deprecationMessage": "",
+                    "description": "",
+                    "kind": 186
+                }
+            ]
+        }
     },
     "routes": [],
     "coverage": {
@@ -656,7 +1435,7 @@
         "status": "low",
         "files": [
             {
-                "filePath": "projects/ng-gridstack/src/components/gridstack-item.component.ts",
+                "filePath": "projects/ngx-gridstack/src/components/gridstack-item.component.ts",
                 "type": "component",
                 "linktype": "component",
                 "name": "GridstackItemComponent",
@@ -665,7 +1444,27 @@
                 "status": "low"
             },
             {
-                "filePath": "projects/ng-gridstack/src/components/gridstack.component.stories.ts",
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "CanvasContent",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "CustomHandler",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
@@ -675,7 +1474,57 @@
                 "status": "low"
             },
             {
-                "filePath": "projects/ng-gridstack/src/components/gridstack.component.stories.ts",
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "defOpts",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "Events",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "NoAminate",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "NoFloat",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "StaticGrid",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
@@ -685,16 +1534,46 @@
                 "status": "low"
             },
             {
-                "filePath": "projects/ng-gridstack/src/components/gridstack.component.ts",
-                "type": "component",
-                "linktype": "component",
-                "name": "GridstackComponent",
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "TemplateContainer",
                 "coveragePercent": 0,
-                "coverageCount": "0/14",
+                "coverageCount": "0/1",
                 "status": "low"
             },
             {
-                "filePath": "projects/ng-gridstack/src/components/gridstack.component.ts",
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "TemplateEvents",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.stories.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "TemplateWithHandler",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "GridstackComponent",
+                "coveragePercent": 17,
+                "coverageCount": "4/23",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/components/gridstack.component.ts",
                 "type": "interface",
                 "linktype": "interface",
                 "name": "HTMLDivElementEx",
@@ -703,7 +1582,16 @@
                 "status": "low"
             },
             {
-                "filePath": "projects/ng-gridstack/src/test.ts",
+                "filePath": "projects/ngx-gridstack/src/pipe/json.pipe.ts",
+                "type": "pipe",
+                "linktype": "pipe",
+                "name": "SafeJsonPipe",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/test.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",
@@ -713,7 +1601,86 @@
                 "status": "low"
             },
             {
-                "filePath": "projects/ng-gridstack/src/test.ts",
+                "filePath": "projects/ngx-gridstack/src/test.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "require",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/utils/debounce.ts",
+                "type": "function",
+                "linktype": "miscellaneous",
+                "linksubtype": "function",
+                "name": "debounce",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/utils/uniqueId.ts",
+                "type": "function",
+                "linktype": "miscellaneous",
+                "linksubtype": "function",
+                "name": "uniqueId",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "projects/ngx-gridstack/src/utils/uniqueId.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "uid",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/app/app.component.ts",
+                "type": "component",
+                "linktype": "component",
+                "name": "AppComponent",
+                "coveragePercent": 0,
+                "coverageCount": "0/2",
+                "status": "low"
+            },
+            {
+                "filePath": "src/environments/environment.prod.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "environment",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/environments/environment.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "environment",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/test.ts",
+                "type": "variable",
+                "linktype": "miscellaneous",
+                "linksubtype": "variable",
+                "name": "context",
+                "coveragePercent": 0,
+                "coverageCount": "0/1",
+                "status": "low"
+            },
+            {
+                "filePath": "src/test.ts",
                 "type": "variable",
                 "linktype": "miscellaneous",
                 "linksubtype": "variable",

@@ -5,17 +5,17 @@
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "forceConsistentCasingInFileNames": true,
-    "allowSyntheticDefaultImports": true,
     "strict": true,
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "sourceMap": true,
     "declaration": false,
     "downlevelIteration": true,
+    "allowSyntheticDefaultImports": true,
     "paths": {
-      "ng-gridstack": [
-        "dist/ng-gridstack/ng-gridstack",
-        "dist/ng-gridstack"
+      "ngx-gridstack": [
+        "dist/ngx-gridstack/ngx-gridstack",
+        "dist/ngx-gridstack"
       ]
     },
     "experimentalDecorators": true,
