@@ -2,6 +2,6 @@
  * Public API Surface of ng-gridstack
  */
 
-export * from './components/gridstack.module';
-export * from './components/gridstack-item.component';
-export * from './components/gridstack.component';
+export * from './directives/gridstack.module';
+export * from './directives/gridstack-item.directive';
+export * from './directives/gridstack.directive';

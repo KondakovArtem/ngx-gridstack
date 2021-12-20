@@ -4,17 +4,17 @@ import { GridStackOptions } from 'gridstack';
 import cloneDeep from 'lodash/cloneDeep';
 import merge from 'lodash/merge';
 
-import { GridstackComponent } from './gridstack.component';
-import { NgGridstackModule } from './gridstack.module';
+import { GridStackDirective } from './gridstack.directive';
+import { GridStackModule } from './gridstack.module';
 import { JsonPipeModule } from '../pipe/json.module';
 
 export default {
     title: 'GridStack',
-    component: GridstackComponent,
+    component: GridStackDirective,
     decorators: [
         moduleMetadata({
             declarations: [],
-            imports: [CommonModule, NgGridstackModule, JsonPipeModule],
+            imports: [CommonModule, GridStackModule, JsonPipeModule],
         }),
     ],
     argTypes: {
@@ -49,7 +49,7 @@ const defOpts = {
                 y: 2,
             },
         ],
-        gridstack: {
+        gridStackOptions: {
             margin: 10,
             disableDrag: false,
             disableResize: false,
@@ -60,7 +60,7 @@ const defOpts = {
     },
 };
 
-const Template: Story<GridstackComponent> = (props) => ({
+const Template: Story<GridStackDirective> = (props) => ({
     props,
     styles: [
         `.grid-stack-item-content {
@@ -68,8 +68,8 @@ const Template: Story<GridstackComponent> = (props) => ({
   }`,
     ],
     template: `
-    <div [gridstack]="gridstack" #gridStack (gridItemsChange)="gridItemsChange($event); items = $event;">
-      <div gridstackItem [data]="item" *ngFor="let item of items; trackBy:gridStack.trackById ">
+    <div [gridStack]="gridStackOptions" #gridStack="gridStack" (gridItemsChange)="gridItemsChange($event); items = $event;">
+      <div gridStackItem [data]="item" *ngFor="let item of items; trackBy:gridStack.trackById ">
         <div class="grid-stack-item-content">Item <div>{{item | json}}</div>
       </div>
     </div>`,
@@ -83,14 +83,14 @@ Object.assign(
     NoAminate,
     merge(cloneDeep(defOpts), {
         args: {
-            gridstack: {
+            gridStackOptions: {
                 animate: false,
             },
         },
     }),
 );
 
-const TemplateWithHandler: Story<GridstackComponent> = (props) => ({
+const TemplateWithHandler: Story<GridStackDirective> = (props) => ({
     props,
     styles: [
         `.grid-stack-item-content {
@@ -108,8 +108,8 @@ const TemplateWithHandler: Story<GridstackComponent> = (props) => ({
   }`,
     ],
     template: `
-    <div [gridstack]="gridstack" #gridStack (gridItemsChange)="gridItemsChange($event); items = $event;">
-      <div gridstackItem [data]="item" *ngFor="let item of items; trackBy:gridStack.trackById ">
+    <div [gridStack]="gridStackOptions" #gridStack="gridStack" (gridItemsChange)="gridItemsChange($event); items = $event;">
+      <div gridStackItem [data]="item" *ngFor="let item of items; trackBy:gridStack.trackById ">
         <div class="grid-stack-item-content">
           <div class="handler"></div>
         Item <div>{{item | json}}</div>
@@ -122,14 +122,14 @@ Object.assign(
     CustomHandler,
     merge(cloneDeep(defOpts), {
         args: {
-            gridstack: {
+            gridStackOptions: {
                 handleClass: 'handler',
             },
         },
     }),
 );
 
-const TemplateContainer: Story<GridstackComponent> = (props) => ({
+const TemplateContainer: Story<GridStackDirective> = (props) => ({
     props,
     styles: [
         `.grid-stack-item-content {
@@ -141,8 +141,8 @@ const TemplateContainer: Story<GridstackComponent> = (props) => ({
   `,
     ],
     template: `
-    <div [gridstack]="gridstack" #gridStack (gridItemsChange)="gridItemsChange($event); items = $event;">
-      <div gridstackItem [data]="item" *ngFor="let item of items; trackBy:gridStack.trackById ">
+    <div [gridStack]="gridStackOptions" #gridStack="gridStack" (gridItemsChange)="gridItemsChange($event); items = $event;">
+      <div gridStackItem [data]="item" *ngFor="let item of items; trackBy:gridStack.trackById ">
         <div class="grid-stack-item-content">
         Item <div>{{item | json}}</div>
       </div>
@@ -154,7 +154,7 @@ Object.assign(
     CanvasContent,
     merge(cloneDeep(defOpts), {
         args: {
-            gridstack: {
+            gridStackOptions: {
                 handleClass: 'handler',
             },
         },
@@ -166,7 +166,7 @@ Object.assign(
     NoFloat,
     merge(cloneDeep(defOpts), {
         args: {
-            gridstack: {
+            gridStackOptions: {
                 float: false,
             },
         },
@@ -178,47 +178,9 @@ Object.assign(
     StaticGrid,
     merge(cloneDeep(defOpts), {
         args: {
-            gridstack: {
+            gridStackOptions: {
                 staticGrid: true,
             },
         },
     }),
 );
-
-const TemplateEvents: Story<GridstackComponent> = (props) => ({
-    props,
-    styles: [
-        `.grid-stack-item-content {
-      font-size: 10px;
-    }
-    .grid-stack {
-      background: yellow;
-    }
-  `,
-    ],
-    args: {
-        safeJson: (): string => {
-            return 'test';
-        },
-    },
-
-    template: `
-    <div [gridstack]="gridstack" #gridStack
-      (onAdded)="onAdded($event)"
-      (onDisable)="onDisable($event)"
-      (onDragstart)="onDragstart($event)"
-      (onDragstop)="onDragstop(safeJson($event))"
-      (onDropped)="onDropped($event)"
-      (onResizestart)="onResizestart($event)"
-      (onResizestop)="onResizestop($event)"
-      (gridItemsChange)="gridItemsChange($event); items = $event;"
-    >
-      <div gridstackItem [data]="item" *ngFor="let item of items; trackBy:gridStack.trackById ">
-        <div class="grid-stack-item-content">
-        Item <div>{{item | safeJson}}</div>
-      </div>
-    </div>`,
-});
-
-export const Events = TemplateEvents.bind({});
-Object.assign(Events, merge({}, cloneDeep(defOpts)));

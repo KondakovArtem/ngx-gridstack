@@ -1,10 +1,8 @@
 {
-  "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
-  "dest": "../../dist/ng-gridstack",
-  "assets": [
-    "./src/styles"
-  ],
-  "lib": {
-    "entryFile": "src/public-api.ts"
-  }
+    "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
+    "dest": "../../dist/ngx-gridstack",
+    "assets": ["./styles"],
+    "lib": {
+        "entryFile": "src/public-api.ts"
+    }
 }

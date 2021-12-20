@@ -1,24 +1,116 @@
-# NgGridstack
+![npm](https://img.shields.io/npm/v/@kondakov.artem/ngx-gridstack) ![NPM](https://img.shields.io/npm/l/@kondakov.artem/ngx-gridstack)
 
-This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 12.2.0.
+# NgxGridStack
 
-## Code scaffolding
+Angular Wrapper library for [GridStack](https://gridstackjs.com/).
 
-Run `ng generate component component-name --project ng-gridstack` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module --project ng-gridstack`.
-> Note: Don't forget to add `--project ng-gridstack` or else it will be added to the default project in your `angular.json` file. 
+## Development server
 
-## Build
+Run `yarn storybook` for a dev server.
 
-Run `ng build ng-gridstack` to build the project. The build artifacts will be stored in the `dist/` directory.
+[**Live Demo**](https://www.chromatic.com/component?buildNumber=1&historyLengthAtIndex=18&distanceToMoveBack=-10&appId=61c0f70a579bcd003a67f38e&name=GridStack&specName=Default&componentInspectorKey=61c0f825579bcd003a680df9-1200-interactive-true&inviteToken=e865a04c2c2742169ab6c6b66ed1f8e5)
 
-## Publishing
+## Installation
 
-After building your library with `ng build ng-gridstack`, go to the dist folder `cd dist/ng-gridstack` and run `npm publish`.
+```sh
+yarn add gridstack
+yarn add @kondakov.artem/ngx-gridstack
+```
 
-## Running unit tests
+## Usage
 
-Run `ng test ng-gridstack` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```typescript
+import { GridStackModule } from '@kondakov.artem/ngx-gridstack';
 
-## Further help
+...
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+@NgModule({
+    declarations: [],
+    imports: [
+      ...
+      GridStackModule
+    ],
+    providers: [],
+})
+export class AppModule {}
+
+```
+
+Add directives to the template
+
+```html
+...
+<div
+    [gridStack]="gridStackOptions"
+    #gridStack="gridStack"
+    (gridItemsChange)="gridItemsChange($event); items = $event;"
+>
+    <div gridStackItem [data]="item" *ngFor="let item of items; trackBy:gridStack.trackById ">
+        <div class="grid-stack-item-content">
+            Item
+            <div>{{item | json}}</div>
+        </div>
+    </div>
+</div>
+```
+
+Add in your Component
+
+```typescript
+...
+
+  public items = [
+    {
+      id: 1,
+      x: 2,
+      y: 0,
+      minW: 2,
+    },
+    {
+      id: 2,
+      x: 4,
+      y: 0,
+    },
+    {
+      id: 3,
+      x: 5,
+      y: 2,
+    },
+  ];
+  
+  public gridStackOptions: GridStackOptions = {
+    margin: 10,
+    disableDrag: false,
+    disableResize: false,
+    auto: true,
+    float: true,
+    animate: true,
+  };
+...
+```
+
+## Styling
+
+Add scss style in your project
+
+```scss
+@import '~@kondakov.artem/ngx-gridstack/styles/gridstack';
+```
+
+## Styling customization
+
+There are several scss variables that can be overridden
+
+```scss
+$gridstack-resizer-size: 10px !default;
+$gridstack-resizer-offset: 0 !default;
+$gridstack-item-shadow: 0 0 14px 1px #9188885a !default;
+$gridstack-item-background: white !default;
+$gridstack-item-action-opacity: 0.8 !default;
+$gridstack-item-action-shadow: 1px 4px 6px rgba(0, 0, 0, 20%) !default;
+$gridstack-item-action-background: aliceblue !default;
+$gridstack-item-resizer-image: ... !default;
+
+$gridstack-columns: 12 !default;
+$gridstack-animation-speed: 0.3s !default;
+```

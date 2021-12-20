@@ -1,6 +1,27 @@
 {
-    "name": "ngx-gridstack",
-    "version": "0.0.1",
+    "name": "@kondakov.artem/ngx-gridstack",
+    "version": "0.0.3",
+    "license": "MIT",
+    "homepage": "https://github.com/KondakovArtem/ngx-gridstack",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/KondakovArtem/ngx-gridstack"
+    },
+    "keywords": [
+        "angular",
+        "gridstack",
+        "wrapper",
+        "library",
+        "typescript"
+    ],
+    "author": "Kondakov Artem <kondakov.artem@gmail.com>",
+    "bugs": {
+        "url": "https://github.com/KondakovArtem/ngx-gridstack/issues"
+    },
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
     "peerDependencies": {
         "@angular/common": "^12.2.14",
         "@angular/core": "^12.2.14",

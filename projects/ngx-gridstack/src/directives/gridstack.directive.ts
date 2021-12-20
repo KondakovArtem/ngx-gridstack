@@ -1,6 +1,4 @@
 import {
-    ChangeDetectionStrategy,
-    Component,
     ElementRef,
     OnInit,
     Output,
@@ -8,6 +6,8 @@ import {
     Input,
     OnChanges,
     SimpleChanges,
+    Directive,
+    HostBinding,
 } from '@angular/core';
 import type {
     GridItemHTMLElement,
@@ -22,7 +22,7 @@ import 'gridstack/dist/h5/gridstack-dd-native';
 import { debounce } from '../utils/debounce';
 import { uniqueId } from '../utils/uniqueId';
 
-import type { GridstackItemComponent } from './gridstack-item.component';
+import type { GridStackItemDirective } from './gridstack-item.directive';
 
 export interface HTMLDivElementEx extends HTMLDivElement {
     gsId?: numberOrString;
@@ -30,16 +30,17 @@ export interface HTMLDivElementEx extends HTMLDivElement {
 
 type TGridItemEl = GridItemHTMLElement | GridStackNode | GridStackNode[] | undefined;
 
-@Component({
-    selector: 'div[gridstack]',
-    template: '<ng-content></ng-content>',
-    // styleUrls: ['./gridstack.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
+@Directive({
+    selector: '[gridStack]',
+    exportAs: 'gridStack',
 })
-export class GridstackComponent implements OnInit, OnChanges {
-    public uid = uniqueId('gridstack');
+export class GridStackDirective implements OnInit, OnChanges {
+    public uid = uniqueId('gridStack');
 
-    @Input() gridstack?: GridStackOptions;
+    @HostBinding('class.grid-stack') gridStackClass = true;
+    @HostBinding('class.inited') inited = false;
+
+    @Input() gridStack?: GridStackOptions;
     /**
      * Occurs when widgets change their position/size due to constrain or direct changes
      */
@@ -83,7 +84,7 @@ export class GridstackComponent implements OnInit, OnChanges {
         el: TGridItemEl;
     }>();
 
-    private gridstackItems: GridstackItemComponent[] = [];
+    private gridStackItems: GridStackItemDirective[] = [];
 
     constructor(private el: ElementRef<HTMLDivElement>) {}
 
@@ -96,11 +97,11 @@ export class GridstackComponent implements OnInit, OnChanges {
 
         // this.grid?.removeWidget
         this.grid?.removeAll();
-        this.gridstackItems.forEach((i) => {
+        this.gridStackItems.forEach((i) => {
             i.isRegistered = false;
         });
 
-        this.gridstackItems.forEach((item) => {
+        this.gridStackItems.forEach((item) => {
             if (!item.isRegistered) {
                 this.grid?.makeWidget(item.el.nativeElement);
                 item.isRegistered = true;
@@ -114,18 +115,18 @@ export class GridstackComponent implements OnInit, OnChanges {
         }
     });
 
-    public registerWidget(gridstackItem: GridstackItemComponent): void {
-        if (!this.gridstackItems.includes(gridstackItem)) {
-            this.gridstackItems.push(gridstackItem);
+    public registerWidget(gridStackItem: GridStackItemDirective): void {
+        if (!this.gridStackItems.includes(gridStackItem)) {
+            this.gridStackItems.push(gridStackItem);
         }
     }
 
-    public unregisterWidget(gridstackItem: GridstackItemComponent): void {
-        this.gridstackItems = this.gridstackItems.filter((i) => i !== gridstackItem);
+    public unregisterWidget(gridStackItem: GridStackItemDirective): void {
+        this.gridStackItems = this.gridStackItems.filter((i) => i !== gridStackItem);
     }
 
     private getCurrentDataItems(): GridStackWidget[] {
-        return (this.gridstackItems || [])
+        return (this.gridStackItems || [])
             .map((item) => {
                 const { data } = item;
                 return data;
@@ -138,7 +139,7 @@ export class GridstackComponent implements OnInit, OnChanges {
             ?.getGridItems()
             .map((item) => {
                 const { gridstackNode } = item;
-                const gridStackItem = this.gridstackItems.find((i) => i.el.nativeElement === item);
+                const gridStackItem = this.gridStackItems.find((i) => i.el.nativeElement === item);
                 if (gridStackItem && gridstackNode) {
                     const { data } = gridStackItem;
                     const { x, y, w, h } = gridstackNode;
@@ -154,11 +155,15 @@ export class GridstackComponent implements OnInit, OnChanges {
     }
 
     private updateChange(): void {
+        if (!this.inited) {
+            this.inited = true;
+            return;
+        }
         const currentItems = this.getCurrentItems();
         if (this.gridItemsChange.observed) {
             this.gridItemsChange.emit(currentItems);
         } else {
-            this.gridstackItems.forEach((item) => {
+            this.gridStackItems.forEach((item) => {
                 const { id } = item.data;
                 const currentItem = currentItems.find((i) => i.id === id);
                 if (currentItem) {
@@ -169,7 +174,7 @@ export class GridstackComponent implements OnInit, OnChanges {
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if (changes.gridstack) {
+        if (changes.gridStack) {
             if (this.grid) {
                 this.grid.off('change');
 
@@ -181,14 +186,14 @@ export class GridstackComponent implements OnInit, OnChanges {
                         autoHide: true,
                         handles: 'e, se, s, sw, w, n, ne, nw',
                     },
-                    ...changes.gridstack.currentValue,
+                    ...changes.gridStack.currentValue,
                 },
                 this.el.nativeElement,
             );
 
             // Events
             this.grid.on('change', () => this.updateChange());
-            this.grid.on('added', (event, items) => this.onAdded.emit({ event, items }));
+            // this.grid.on('added', (event, items) => this.onAdded.emit({ event, items }));
             this.grid.on('disable', () => this.onDisable.emit(true));
             this.grid.on('enable', () => this.onDisable.emit(false));
             this.grid.on('dragstart', (event, el) => this.onDragstart.emit({ event, el }));
@@ -204,6 +209,6 @@ export class GridstackComponent implements OnInit, OnChanges {
     }
 
     ngOnInit(): void {
-        this.el.nativeElement.classList.add('grid-stack');
+        // this.el.nativeElement.classList.add('grid-stack');
     }
 }

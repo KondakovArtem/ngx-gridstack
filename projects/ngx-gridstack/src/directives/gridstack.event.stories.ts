@@ -4,17 +4,17 @@ import { GridStackOptions } from 'gridstack';
 import cloneDeep from 'lodash/cloneDeep';
 import merge from 'lodash/merge';
 import { Component, Input } from '@angular/core';
-import safeJsonStringify from 'safe-json-stringify';
+// import safeJsonStringify from 'safe-json-stringify';
 
-import { GridstackComponent } from './gridstack.component';
-import { NgGridstackModule } from './gridstack.module';
+import { GridStackDirective } from './gridstack.directive';
+import { GridStackModule } from './gridstack.module';
 import { JsonPipeModule } from '../pipe/json.module';
 
 @Component({
     selector: 'grid-event-story',
     template: `<div
-        [gridstack]="gridstack"
-        #gridStack
+        [gridStack]="gridStackOptions"
+        #gridStack="gridStack"
         (onAdded)="onAdded(safeJson($event))"
         (onDisable)="onDisable(safeJson($event))"
         (onDragstart)="onDragstart(safeJson($event))"
@@ -24,7 +24,7 @@ import { JsonPipeModule } from '../pipe/json.module';
         (onResizestop)="onResizestop(safeJson($event))"
         (gridItemsChange)="gridItemsChange(safeJson($event)); items = $event"
     >
-        <div gridstackItem [data]="item" *ngFor="let item of items; trackBy: gridStack.trackById">
+        <div gridStackItem [data]="item" *ngFor="let item of items; trackBy: gridStack.trackById">
             <div class="grid-stack-item-content">
                 Item
                 <div>{{ item | safeJson }}</div>
@@ -56,12 +56,12 @@ class AStoryComponent {
 }
 
 export default {
-    title: 'GridStack/event',
+    title: 'GridStack',
     component: AStoryComponent,
     decorators: [
         moduleMetadata({
             declarations: [],
-            imports: [CommonModule, NgGridstackModule, JsonPipeModule],
+            imports: [CommonModule, GridStackModule, JsonPipeModule],
         }),
     ],
     argTypes: {
@@ -107,7 +107,7 @@ const defOpts = {
     },
 };
 
-const TemplateEvents: Story<GridstackComponent> = (props) => ({
+const TemplateEvents: Story<GridStackDirective> = (props) => ({
     props,
     styles: [
         `.grid-stack-item-content {

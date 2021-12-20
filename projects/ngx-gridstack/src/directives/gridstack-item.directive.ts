@@ -1,7 +1,6 @@
 import {
-    ChangeDetectionStrategy,
     ChangeDetectorRef,
-    Component,
+    Directive,
     ElementRef,
     Input,
     OnChanges,
@@ -9,16 +8,14 @@ import {
     SimpleChanges,
 } from '@angular/core';
 import type { GridStackWidget } from 'gridstack';
-import { GridstackComponent, HTMLDivElementEx } from './gridstack.component';
+import { GridStackDirective, HTMLDivElementEx } from './gridstack.directive';
 
-@Component({
-    selector: 'div[gridstackItem]',
-    template: '<ng-content></ng-content>',
-    changeDetection: ChangeDetectionStrategy.OnPush,
+@Directive({
+    selector: '[gridStackItem]',
 })
-export class GridstackItemComponent implements OnChanges, OnDestroy {
+export class GridStackItemDirective implements OnChanges, OnDestroy {
     constructor(
-        private gridStack: GridstackComponent,
+        private gridStack: GridStackDirective,
         public el: ElementRef<HTMLDivElementEx>,
         private cdr: ChangeDetectorRef,
     ) {}
