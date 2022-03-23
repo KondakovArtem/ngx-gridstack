@@ -28,6 +28,16 @@ export interface HTMLDivElementEx extends HTMLDivElement {
     gsId?: numberOrString;
 }
 
+export interface AddedEvent {
+    event: Event;
+    items: TGridItemEl;
+}
+
+export interface NewItemsEvent {
+    event: Event;
+    items: GridStackWidget[];
+}
+
 type TGridItemEl = GridItemHTMLElement | GridStackNode | GridStackNode[] | undefined;
 
 @Directive({
@@ -48,10 +58,11 @@ export class GridStackDirective implements OnInit, OnChanges {
     /**
      * Called when widgets are being added to a grid
      */
-    @Output() onAdded = new EventEmitter<{
-        event: Event;
-        items: TGridItemEl;
-    }>();
+    @Output() onAdded = new EventEmitter<AddedEvent>();
+    /**
+     * Called when new widgets are being added to a grid (f.e. by drop)
+     */
+    @Output() onNewItems = new EventEmitter<NewItemsEvent>();
     @Output() onDisable = new EventEmitter<boolean>();
     /**
      * called when grid item is starting to be dragged
@@ -110,7 +121,7 @@ export class GridStackDirective implements OnInit, OnChanges {
         });
         this.grid?.commit();
         const newItems = this.getCurrentItems();
-        if (JSON.stringify(newItems) !== preItem) {
+        if (JSON.stringify(newItems) !== preItem || !this.inited) {
             this.updateChange();
         }
     });
@@ -151,7 +162,7 @@ export class GridStackDirective implements OnInit, OnChanges {
     }
 
     public trackById(idx: number, value: GridStackWidget): string | number | undefined {
-        return value?.id;
+        return value?.id?.toString();
     }
 
     private updateChange(): void {
@@ -171,6 +182,33 @@ export class GridStackDirective implements OnInit, OnChanges {
                 }
             });
         }
+    }
+
+    private convertToGridStackWidgets(items: GridStackNode[] = []): GridStackWidget[] {
+        return items.map(item => {
+            const widget: Record<string, unknown> = {};
+            Object.keys(item).forEach(key => {
+                if (!key.startsWith('_') && !['el', 'grid'].includes(key)) {
+                    widget[key] = (item as any)[key];
+                }
+            });
+            return widget as GridStackWidget;
+        });
+    }
+
+    private handleOnAdd(event: Event, items: TGridItemEl = []): void {
+        this.onAdded.emit({ event, items});
+        const currentIds = new Set(this.gridStackItems.map(item => item.data.id));
+        const newGridItems = (items as GridStackNode[]).filter(item => !currentIds.has(item.id));
+        if (newGridItems.length === 0) {
+            return;
+        }
+        newGridItems.forEach(gridItem => {
+            if (gridItem.el) {
+                this.grid?.removeWidget(gridItem.el, true, false);
+            }
+        });
+        this.onNewItems.emit({ event, items: this.convertToGridStackWidgets(newGridItems as GridStackNode[])});
     }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -193,7 +231,7 @@ export class GridStackDirective implements OnInit, OnChanges {
 
             // Events
             this.grid.on('change', () => this.updateChange());
-            // this.grid.on('added', (event, items) => this.onAdded.emit({ event, items }));
+            this.grid.on('added', (event, items) => this.handleOnAdd(event, items));
             this.grid.on('disable', () => this.onDisable.emit(true));
             this.grid.on('enable', () => this.onDisable.emit(false));
             this.grid.on('dragstart', (event, el) => this.onDragstart.emit({ event, el }));

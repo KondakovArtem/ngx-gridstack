@@ -29,6 +29,7 @@ export class GridStackItemDirective implements OnChanges, OnDestroy {
     public isRegistered = false;
 
     public updateGridAttr(data: GridStackWidget = this.data): void {
+        this.el.nativeElement.setAttribute('gs-id', `${data.id}`);
         this.el.nativeElement.setAttribute('gs-w', `${data.w || 1}`);
         this.el.nativeElement.setAttribute('gs-h', `${data.h || 1}`);
         this.el.nativeElement.setAttribute('gs-x', `${data.x || 0}`);
@@ -44,6 +45,15 @@ export class GridStackItemDirective implements OnChanges, OnDestroy {
 
         if (data.maxW) this.el.nativeElement.setAttribute('gs-max-w', `${data.maxW}`);
         else this.el.nativeElement.removeAttribute('gs-max-w');
+
+        if (data.noResize) this.el.nativeElement.setAttribute('gs-no-resize', `${data.noResize}`);
+        else this.el.nativeElement.removeAttribute('gs-no-resize');
+
+        if (data.noMove) this.el.nativeElement.setAttribute('gs-no-move', `${data.noMove}`);
+        else this.el.nativeElement.removeAttribute('gs-no-move');
+
+        if (data.locked) this.el.nativeElement.setAttribute('gs-locked', `${data.locked}`);
+        else this.el.nativeElement.removeAttribute('gs-locked');
 
         if (!this.isRegistered) {
             this.gridStack.registerWidget(this);

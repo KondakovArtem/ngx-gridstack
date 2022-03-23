@@ -3,6 +3,7 @@
 $gridstack-resizer-size: 10px !default;
 $gridstack-resizer-offset: 0 !default;
 $gridstack-item-shadow: 0 0 14px 1px #9188885a !default;
+$gridstack-item-border-radius: 0 !default;
 $gridstack-item-background: white !default;
 $gridstack-item-action-opacity: 0.8 !default;
 $gridstack-item-action-shadow: 1px 4px 6px rgba(0, 0, 0, 20%) !default;
@@ -67,6 +68,7 @@ $gridstack-animation-speed: 0.3s !default;
             overflow-x: hidden;
             overflow-y: auto;
             box-shadow: $gridstack-item-shadow;
+            border-radius: $gridstack-item-border-radius;
         }
 
         > .ui-resizable-handle {
