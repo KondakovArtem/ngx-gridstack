@@ -185,9 +185,9 @@ export class GridStackDirective implements OnInit, OnChanges {
     }
 
     private convertToGridStackWidgets(items: GridStackNode[] = []): GridStackWidget[] {
-        return items.map(item => {
+        return items.map((item) => {
             const widget: Record<string, unknown> = {};
-            Object.keys(item).forEach(key => {
+            Object.keys(item).forEach((key) => {
                 if (!key.startsWith('_') && !['el', 'grid'].includes(key)) {
                     widget[key] = (item as any)[key];
                 }
@@ -197,18 +197,23 @@ export class GridStackDirective implements OnInit, OnChanges {
     }
 
     private handleOnAdd(event: Event, items: TGridItemEl = []): void {
-        this.onAdded.emit({ event, items});
-        const currentIds = new Set(this.gridStackItems.map(item => item.data.id));
-        const newGridItems = (items as GridStackNode[]).filter(item => !currentIds.has(item.id));
+        this.onAdded.emit({ event, items });
+        const currentIds = new Set(this.gridStackItems.map((item) => item.data.id?.toString()));
+        const newGridItems = (items as GridStackNode[]).filter(
+            (item) => !currentIds.has(item.id?.toString()),
+        );
         if (newGridItems.length === 0) {
             return;
         }
-        newGridItems.forEach(gridItem => {
+        newGridItems.forEach((gridItem) => {
             if (gridItem.el) {
                 this.grid?.removeWidget(gridItem.el, true, false);
             }
         });
-        this.onNewItems.emit({ event, items: this.convertToGridStackWidgets(newGridItems as GridStackNode[])});
+        this.onNewItems.emit({
+            event,
+            items: this.convertToGridStackWidgets(newGridItems as GridStackNode[]),
+        });
     }
 
     ngOnChanges(changes: SimpleChanges): void {
